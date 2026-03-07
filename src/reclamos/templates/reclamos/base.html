@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Gestor Municipalidad de Valle Maria{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { background-color: #f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar {
+            min-height: 100vh;
+            background-color: #1f2933;
+            color: white;
+            width: 16.666%;
+            transition: transform 0.3s ease, width 0.3s ease;
+        }
+
+        .sidebar a { color: #cfd8dc; text-decoration: none; }
+        .sidebar a:hover { color: #ffffff; }
+        .sidebar-title { font-weight: bold; font-size: 1.2rem; }
+
+        /* SIDEBAR OCULTO */
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+            width: 0;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+
+        /* CONTENIDO */
+        .content {
+            padding: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .content-expanded {
+            width: calc(100% - 16.666%);
+        }
+
+        footer { background-color: #1f2933; color: #cfd8dc; }
+        footer a { color: #cfd8dc; }
+
+        /* SUBMENU CONFIGURACIÓN */
+        #config-menu {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .config-collapsed {
+            max-height: 0;
+        }
+
+        .config-expanded {
+            max-height: 300px; /* suficiente para los ítems */
+        }
+
+        #config-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .arrow-rotated {
+            transform: rotate(180deg);
+        }
+
+         .badge-custom {   /* estilo para el badge de la tabla de reclamos */
+            display: inline-block;
+            width: 80px;
+            text-align: center;
+         }
+
+        .fila-seleccionada td{
+            color:#FFFFFF;
+            background-color:#656C7D !important;
+        }
+         .tabla-historial td{
+            font-size: 13px;
+            padding: 4px 6px;
+            line-height: 1.2;
+        }
+
+        .tabla-historial th{
+            font-size: 13px;
+            padding: 5px;
+        }
+
+        .tabla-historial{
+            width: auto;
+            table-layout: auto;
+        }
+
+        .tabla-historial thead th{
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .tabla-historial th, .tabla-historial td
+        {
+            white-space: nowrap;
+        }
+
+        .tabla-historial td:nth-child(5),
+        .tabla-historial th:nth-child(5){
+            max-width: 300px;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .modal-historial{
+            max-width: fit-content;
+        }
+        .modal-historial-body{
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <!-- BOTÓN MENU -->
+    <button class="btn btn-outline-light btn-sm me-3" onclick="toggleSidebarLeft()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <span class="navbar-text text-white me-4">
+        <i class="fa-solid fa-user"></i> Usuario: <strong>{{ user.username }}</strong>
+    </span>
+
+    <span class="navbar-text text-white me-auto">
+        <i class="fa-solid fa-calendar-days"></i> {{ fecha_actual }}
+    </span>
+
+    <form method="post" action="{% url 'logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </button>
+    </form>
+</nav>
+
+<div class="container-fluid">
+    <div class="row flex-nowrap">
+
+        <!-- MENU IZQUIERDO -->
+        <aside id="sidebar-left" class="sidebar p-3">
+            <div class="sidebar-title mb-4">GMVM</div>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-clipboard-list"></i> Reclamos</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-users"></i> Vecinos</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-bell"></i> Notificaciones</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-chart-line"></i> Reportes</a></li>
+                <li class="nav-item mt-3">
+                    <a href="javascript:void(0);" class="d-flex justify-content-between align-items-center"
+                       onclick="toggleConfigMenu()">
+                        <strong>Configuración</strong>
+                        <i id="config-arrow" class="fa-solid fa-chevron-down"></i>
+                    </a>
+                </li>
+
+                <ul id="config-menu" class="nav flex-column ms-3 config-collapsed">
+                    <li class="nav-item"><a href="#">Usuarios</a></li>
+                    <li class="nav-item"><a href="#">Permisos</a></li>
+                    <li class="nav-item"><a href="#">Parámetros</a></li>
+                </ul>
+            </ul>
+        </aside>
+
+        <!-- CONTENIDO CENTRAL -->
+        <main id="main-content" class="col content">
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <!-- MENU DERECHO -->
+        <aside class="col-md-2 bg-light p-3 border-start">
+            {% block sidebar_right %}
+            {% endblock %}
+        </aside>
+
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="text-center py-3 mt-4">
+    <div>
+        Desarrollado por <strong>MEF Sistemas</strong> © 2026
+    </div>
+    <div>
+        <a href="#"><i class="fa-brands fa-facebook"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-twitter"></i></a>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function toggleSidebarLeft() {
+    const sidebar = document.getElementById('sidebar-left');
+    sidebar.classList.toggle('sidebar-collapsed');
+}
+    function toggleConfigMenu() {
+    const menu = document.getElementById('config-menu');
+    const arrow = document.getElementById('config-arrow');
+
+    if (menu.classList.contains('config-collapsed')) {
+        menu.classList.remove('config-collapsed');
+        menu.classList.add('config-expanded');
+        arrow.classList.add('arrow-rotated');
+    } else {
+        menu.classList.add('config-collapsed');
+        menu.classList.remove('config-expanded');
+        arrow.classList.remove('arrow-rotated');
+    }
+}
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
