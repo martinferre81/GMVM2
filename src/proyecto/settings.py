@@ -15,6 +15,10 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -23,14 +27,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-4pq1c6%fp6bv+&@_kk@$mkk)h(n#k)iz4+a#z@twzmhkqr^e%z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+# Confía en el host que viene por proxy
+USE_X_FORWARDED_HOST = True
+
+# Indica a Django que si X-Forwarded-Proto dice 'https', considere la solicitud segura
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "reclamos.municipalidadvallemaria.com",
+    "www.reclamos.municipalidadvallemaria.com",]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "http://reclamos.municipalidadvallemaria.com",
     "https://reclamos.municipalidadvallemaria.com",
+    "http://www.reclamos.municipalidadvallemaria.com",
+    "https://www.reclamos.municipalidadvallemaria.com",
 ]
+
 
 
 # Application definition
@@ -85,11 +103,14 @@ WSGI_APPLICATION = 'proyecto.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'gmvm',
+        'USER': 'gmvm_usr',
+        'PASSWORD': 'gmvm_2701',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -125,4 +146,3 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
