@@ -12,51 +12,69 @@ from .models import HistorialReclamo
 from datetime import datetime
 from django.utils import timezone
 from .models import EstadoReclamo, TipoReclamo
+from django.db.models import Count
+from django.utils.timezone import now
 
 
 # Create your views here.
-
 @login_required
 def inicio(request):
     user = request.user
 
     hoy = timezone.now()
 
-    primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
+    # Contar los reclamos del mes
+    reclamos_mes = Reclamo.objects.filter(
+        fecha_creacion__year=hoy.year,
+        fecha_creacion__month=hoy.month
+    ).count()
 
+    reclamos_en_proceso = Reclamo.objects.filter(
+        estado__nombre="EN_PROCESO"
+    ).count()
+
+    reclamos_finalizados = Reclamo.objects.filter(
+        estado__nombre="FINALIZADO"
+    ).count()
+
+    reclamos_anulados = Reclamo.objects.filter(
+        estado__nombre="ANULADO"
+    ).count()
+
+    # Fechas predeterminadas para el mes
+    primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
     if hoy.month == 12:
         siguiente_mes = hoy.replace(year=hoy.year + 1, month=1, day=1)
     else:
         siguiente_mes = hoy.replace(month=hoy.month + 1, day=1)
 
+    fecha_inicio_mes = primer_dia_mes.date()
+    fecha_fin_mes = (siguiente_mes - timezone.timedelta(days=1)).date()
+
+    # Obtener las fechas del formulario, si existen
+    fecha_desde = request.GET.get('fecha_desde', fecha_inicio_mes)
+    fecha_hasta = request.GET.get('fecha_hasta', fecha_fin_mes)
+
+    # Comprobar si las fechas están vacías, y si es así, asignar las fechas predeterminadas
+    if not fecha_desde:
+        fecha_desde = fecha_inicio_mes.strftime('%Y-%m-%d')
+
+    if not fecha_hasta:
+        fecha_hasta = fecha_fin_mes.strftime('%Y-%m-%d')
+
     # QUERY BASE (todos los reclamos del mes)
     reclamos = Reclamo.objects.select_related(
-        'usuario',
-        'estado',
-        'tipo_reclamo'
+        'usuario', 'estado', 'tipo_reclamo'
     ).filter(
-        fecha_creacion__gte=primer_dia_mes,
-        fecha_creacion__lt=siguiente_mes
+        fecha_creacion__gte=fecha_desde,
+        fecha_creacion__lte=fecha_hasta
     )
 
-    # Filtro por permisos del usuario
-    if not user.groups.filter(name='ADMINISTRADOR').exists():
-        grupos_usuario = user.groups.values_list('name', flat=True)
-
-        reclamos = reclamos.filter(
-            tipo_reclamo__nombre__in=grupos_usuario
-        )
-    fecha_desde = request.GET.get('fecha_desde')
-    fecha_hasta = request.GET.get('fecha_hasta')
+    # Filtros adicionales
     estado = request.GET.get('estado')
     vecino = request.GET.get('vecino')
     tipo = request.GET.get('tipo')
-
-    if fecha_desde:
-        reclamos = reclamos.filter(fecha_creacion__date__gte=fecha_desde)
-
-    if fecha_hasta:
-        reclamos = reclamos.filter(fecha_creacion__date__lte=fecha_hasta)
+    prioridad = request.GET.get('prioridad')
 
     if estado:
         reclamos = reclamos.filter(estado_id=estado)
@@ -67,22 +85,24 @@ def inicio(request):
     if tipo:
         reclamos = reclamos.filter(tipo_reclamo_id=tipo)
 
+    if prioridad:
+        reclamos = reclamos.filter(prioridad=prioridad)
+
     form = ReclamoForm()
 
     if request.method == 'POST':
-
         reclamo_id = request.POST.get('reclamo_id')
 
         estado_anterior = None
         tipo_anterior = None
-
         comentario_operador = request.POST.get('comentario_operador', '')
+
         if reclamo_id:
-            # Editamos el reclamo
+            # Editar un reclamo existente
             reclamo = Reclamo.objects.get(id=reclamo_id)
             vecino_original = reclamo.id_contribuyente
 
-            # Guardamos valores anteriores para ver si cambio algo y actualizar luego el log
+            # Guardar valores anteriores para ver si cambió algo y actualizar el historial
             estado_anterior = reclamo.estado
             tipo_anterior = reclamo.tipo_reclamo
             prioridad_anterior = reclamo.prioridad
@@ -91,34 +111,29 @@ def inicio(request):
             vecino_anterior = reclamo.id_contribuyente
 
             form = ReclamoForm(request.POST, instance=reclamo)
-
         else:
             # Nuevo reclamo
             form = ReclamoForm(request.POST)
 
         if form.is_valid():
-
             reclamo = form.save(commit=False)
             reclamo.id_contribuyente = vecino_original
 
             if not reclamo_id:
                 reclamo.usuario = user
-
             reclamo.usuario_ult_modificacion = user
-
             reclamo.save()
 
             if reclamo_id:
-
                 cambios = False
-
                 historial = HistorialReclamo(
                     reclamo=reclamo,
                     usuario=user,
-                    accion="Actualizacion reclamo",
+                    accion="Actualización de reclamo",
                     comentario=comentario_operador
                 )
 
+                # Ver si ha habido cambios en los valores del reclamo
                 if estado_anterior != reclamo.estado:
                     historial.estado_anterior = estado_anterior
                     historial.estado_nuevo = reclamo.estado
@@ -152,7 +167,6 @@ def inicio(request):
                 if cambios or comentario_operador:
                     historial.save()
             else:
-
                 HistorialReclamo.objects.create(
                     reclamo=reclamo,
                     usuario=user,
@@ -163,10 +177,12 @@ def inicio(request):
                     prioridad_nueva=reclamo.prioridad,
                     titulo_nuevo=reclamo.titulo,
                     descripcion_nueva=reclamo.descripcion,
-                    vecino_nuevo=reclamo.id_contribuyente
+                    vecino_nuevo=reclamo.id_contribuyente,
                 )
 
             return redirect('inicio')
+
+    # Filtra los estados y tipos activos
     estados = EstadoReclamo.objects.filter(activo=True)
     tipos = TipoReclamo.objects.filter(activo=True)
 
@@ -174,8 +190,17 @@ def inicio(request):
         'reclamos': reclamos,
         'form': form,
         'estados': estados,
-        'tipos': tipos
+        'tipos': tipos,
+        'reclamos_mes': reclamos_mes,
+        'reclamos_en_proceso': reclamos_en_proceso,
+        'reclamos_finalizados': reclamos_finalizados,
+        'reclamos_anulados': reclamos_anulados,
+        'fecha_inicio_mes': fecha_inicio_mes,
+        'fecha_fin_mes': fecha_fin_mes,
+        'fecha_desde': fecha_desde,  # Pasa las fechas seleccionadas
+        'fecha_hasta': fecha_hasta  # Pasa las fechas seleccionadas
     })
+
 
 @login_required
 def lista_reclamos(request):
@@ -183,11 +208,37 @@ def lista_reclamos(request):
     reclamos = Reclamo.objects.all()
     form = ReclamoForm()
 
+    hoy = timezone.now()
+    primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
+
+    # Fechas para setear los calendarios
+    if hoy.month == 12:
+        siguiente_mes = hoy.replace(year=hoy.year + 1, month=1, day=1)
+    else:
+        siguiente_mes = hoy.replace(month=hoy.month + 1, day=1)
+
+    fecha_inicio_mes = primer_dia_mes.date()
+    fecha_fin_mes = (siguiente_mes - timezone.timedelta(days=1)).date()
+
     if request.method == 'POST':
         form = ReclamoForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('lista_reclamos')
+
+    reclamos_mes = reclamos.count()
+
+    reclamos_en_proceso = reclamos.filter(
+        estado__nombre="EN_PROCESO"
+    ).count()
+
+    reclamos_finalizados = reclamos.filter(
+        estado__nombre="FINALIZADO"
+    ).count()
+
+    reclamos_anulados = reclamos.filter(
+        estado__nombre="ANULADO"
+    ).count()
 
     estados = EstadoReclamo.objects.filter(activo=True)
     tipos = TipoReclamo.objects.filter(activo=True)
@@ -196,7 +247,14 @@ def lista_reclamos(request):
         'reclamos': reclamos,
         'form': form,
         'estados': estados,
-        'tipos': tipos
+        'tipos': tipos,
+        'reclamos_mes': reclamos_mes,
+        'reclamos_en_proceso': reclamos_en_proceso,
+        'reclamos_finalizados': reclamos_finalizados,
+        'reclamos_anulados': reclamos_anulados,
+        'fecha_inicio_mes': fecha_inicio_mes,
+        'fecha_fin_mes': fecha_fin_mes
+
     })
 
 @login_required

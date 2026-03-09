@@ -3,9 +3,49 @@
 {% block title %}Reclamos - GMVM{% endblock %}
 
 {% block content %}
-<h4 class="mb-4" xmlns:e.id xmlns:e.id xmlns:v.id xmlns:t.id xmlns:e.id xmlns:e.id xmlns:e.id xmlns:e.id xmlns:e.id
-    xmlns:e.id>Listado de Reclamos</h4>
+<div class="row mb-3">
 
+    <div class="col-md-3">
+        <div class="card text-bg-primary shadow-sm">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-calendar fa-lg"></i>
+                <div>Ingresados este mes</div>
+                <h3>{{ reclamos_mes }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-warning shadow-sm">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-gear fa-lg"></i>
+                <div>En proceso</div>
+                <h3>{{ reclamos_en_proceso }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-success shadow-sm">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-check fa-lg"></i>
+                <div>Finalizados</div>
+                <h3>{{ reclamos_finalizados }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-danger shadow-sm">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-ban fa-lg"></i>
+                <div>Anulados</div>
+                <h3>{{ reclamos_anulados }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
 <div class="table-responsive">
     <table class="table table-bordered table-striped table-hover align-middle">
         <thead class="table-dark">
@@ -82,7 +122,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center">No hay reclamos</td>
+                <td colspan="7" class="text-center">No se encontraron reclamos con los filtros aplicados</td>
             </tr>
             {% endfor %}
             </tbody>
@@ -128,13 +168,13 @@
             <div class="mb-2">
                 <label class="form-label">Fecha creación</label>
                 <input type="date" class="form-control form-control-sm"
-                       name="fecha_desde" value="{{ request.GET.fecha_creacion }}">
+                       name="fecha_desde" value="{{ fecha_desde }}">
             </div>
 
             <div class="mb-2">
                 <label class="form-label">Fecha hasta</label>
                 <input type="date" class="form-control form-control-sm"
-                       name="fecha_hasta" value="{{ request.GET.fecha_creacion }}">
+                       name="fecha_hasta" value="{{ fecha_hasta}}">
             </div>
 
             <div class="mb-2">
@@ -156,9 +196,9 @@
                 <label class="form-label">Prioridad</label>
                 <select class="form-select form-select-sm" name="prioridad">
                     <option value="">Todas</option>
-                    <option value="3">Alta</option>
-                    <option value="2">Media</option>
-                    <option value="1">Baja</option>
+                    <option value="3" {% if request.GET.prioridad == "3" %}selected{% endif %}>Alta</option>
+                    <option value="2" {% if request.GET.prioridad == "2" %}selected{% endif %}>Media</option>
+                    <option value="1" {% if request.GET.prioridad == "1" %}selected{% endif %}>Baja</option>
                 </select>
             </div>
 
