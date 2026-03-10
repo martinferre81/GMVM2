@@ -1,3 +1,6 @@
+import calendar
+
+from django.db.models.functions import ExtractMonth
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.views import LoginView
@@ -14,6 +17,8 @@ from django.utils import timezone
 from .models import EstadoReclamo, TipoReclamo
 from django.db.models import Count
 from django.utils.timezone import now
+from django.db.models import Avg, F, ExpressionWrapper, DurationField
+from datetime import timedelta
 
 
 # Create your views here.
@@ -41,6 +46,30 @@ def inicio(request):
         estado__nombre="ANULADO"
     ).count()
 
+    limite_demora = hoy - timedelta(days=5)
+
+    reclamos_demorados = Reclamo.objects.filter(
+        estado__nombre="EN_PROCESO",
+        fecha_creacion__lt=limite_demora
+    ).count()
+
+    tiempos = Reclamo.objects.filter(
+        fecha_cierre__isnull=False
+    ).annotate(
+        duracion=ExpressionWrapper(
+            F('fecha_cierre') - F('fecha_creacion'),
+            output_field=DurationField()
+        )
+    ).aggregate(promedio=Avg('duracion'))
+
+    tiempo_promedio = tiempos['promedio']
+
+    if tiempo_promedio:
+        dias = tiempo_promedio.days
+        tiempo_promedio = f"{dias} días"
+    else:
+        tiempo_promedio = "-"
+
     # Fechas predeterminadas para el mes
     primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
     if hoy.month == 12:
@@ -49,13 +78,13 @@ def inicio(request):
         siguiente_mes = hoy.replace(month=hoy.month + 1, day=1)
 
     fecha_inicio_mes = primer_dia_mes.date()
-    fecha_fin_mes = (siguiente_mes - timezone.timedelta(days=1)).date()
+    ultimo_dia = calendar.monthrange(hoy.year, hoy.month)[1]
+    fecha_fin_mes = hoy.replace(day=ultimo_dia).date()
 
     # Obtener las fechas del formulario, si existen
-    fecha_desde = request.GET.get('fecha_desde', fecha_inicio_mes)
-    fecha_hasta = request.GET.get('fecha_hasta', fecha_fin_mes)
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
 
-    # Comprobar si las fechas están vacías, y si es así, asignar las fechas predeterminadas
     if not fecha_desde:
         fecha_desde = fecha_inicio_mes.strftime('%Y-%m-%d')
 
@@ -66,8 +95,8 @@ def inicio(request):
     reclamos = Reclamo.objects.select_related(
         'usuario', 'estado', 'tipo_reclamo'
     ).filter(
-        fecha_creacion__gte=fecha_desde,
-        fecha_creacion__lte=fecha_hasta
+        fecha_creacion__date__gte=fecha_desde,
+        fecha_creacion__date__lte=fecha_hasta
     )
 
     # Filtros adicionales
@@ -88,7 +117,16 @@ def inicio(request):
     if prioridad:
         reclamos = reclamos.filter(prioridad=prioridad)
 
+    if request.GET.get("demorados"):
+        reclamos = Reclamo.objects.select_related(
+            'usuario', 'estado', 'tipo_reclamo'
+        ).filter(
+            estado__nombre="EN_PROCESO",
+            fecha_creacion__lt=timezone.now() - timedelta(days=5)
+        )
+
     form = ReclamoForm()
+
 
     if request.method == 'POST':
         reclamo_id = request.POST.get('reclamo_id')
@@ -117,11 +155,17 @@ def inicio(request):
 
         if form.is_valid():
             reclamo = form.save(commit=False)
-            reclamo.id_contribuyente = vecino_original
+            if reclamo_id:
+                reclamo.id_contribuyente = vecino_original
 
             if not reclamo_id:
                 reclamo.usuario = user
+
             reclamo.usuario_ult_modificacion = user
+
+            if reclamo.estado.nombre == "FINALIZADO" and not reclamo.fecha_cierre:
+                reclamo.fecha_cierre = timezone.now()
+
             reclamo.save()
 
             if reclamo_id:
@@ -186,6 +230,49 @@ def inicio(request):
     estados = EstadoReclamo.objects.filter(activo=True)
     tipos = TipoReclamo.objects.filter(activo=True)
 
+    # Grafico reclamos por tipo
+    datos_tipos = Reclamo.objects.values(
+        'tipo_reclamo__nombre'
+    ).annotate(
+        total=Count('id')
+    ).order_by('-total')
+
+    labels_tipos = [d['tipo_reclamo__nombre'] for d in datos_tipos]
+    data_tipos = [d['total'] for d in datos_tipos]
+
+    #Datos para el grafico de reclamos por mes
+    reclamos_mes_data = (
+        Reclamo.objects
+        .filter(fecha_creacion__year=hoy.year)
+        .annotate(mes=ExtractMonth('fecha_creacion'))
+        .values('mes')
+        .annotate(total=Count('id'))
+        .order_by('mes')
+    )
+
+    labels_meses = []
+    data_meses = []
+
+    meses = [
+        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    ]
+
+    for r in reclamos_mes_data:
+        labels_meses.append(meses[r['mes'] - 1])
+        data_meses.append(r['total'])
+
+    #Datos para el grafico de reclamos por estados
+
+    reclamos_estado = (
+        Reclamo.objects
+        .values('estado__nombre')
+        .annotate(total=Count('id'))
+    )
+
+    labels_estado = [r['estado__nombre'] for r in reclamos_estado]
+    data_estado = [r['total'] for r in reclamos_estado]
+
     return render(request, 'reclamos/inicio.html', {
         'reclamos': reclamos,
         'form': form,
@@ -195,10 +282,18 @@ def inicio(request):
         'reclamos_en_proceso': reclamos_en_proceso,
         'reclamos_finalizados': reclamos_finalizados,
         'reclamos_anulados': reclamos_anulados,
+        'tiempo_promedio': tiempo_promedio,
+        'reclamos_demorados': reclamos_demorados,
         'fecha_inicio_mes': fecha_inicio_mes,
         'fecha_fin_mes': fecha_fin_mes,
-        'fecha_desde': fecha_desde,  # Pasa las fechas seleccionadas
-        'fecha_hasta': fecha_hasta  # Pasa las fechas seleccionadas
+        'fecha_desde': fecha_desde,  # fecha seleccionada
+        'fecha_hasta': fecha_hasta,  # fecha seleccionada
+        'labels_tipos': labels_tipos,
+        'data_tipos': data_tipos,
+        'labels_meses': labels_meses,
+        'data_meses': data_meses,
+        'labels_estado': labels_estado,
+        'data_estado': data_estado
     })
 
 

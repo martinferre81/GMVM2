@@ -3,6 +3,8 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from datetime import timedelta
+
 
 
 
@@ -61,6 +63,26 @@ class Reclamo(models.Model):
         if self.estado.nombre.lower() == "finalizado" and not self.fecha_cierre:
             self.fecha_cierre = timezone.now()
         super().save(*args, **kwargs)
+
+    @property
+    def esta_demorado(self):
+
+        # Solo los reclamos en proceso pueden demorarse
+        if self.estado.nombre != "EN_PROCESO":
+            return False
+
+        limite = timezone.now() - timedelta(days=5)
+
+        return self.fecha_creacion < limite
+
+    @property
+    def dias_demora(self):
+
+        if not self.esta_demorado:
+            return 0
+
+        diferencia = timezone.now() - self.fecha_creacion
+        return diferencia.days
 
     def __str__(self):
         return f"Reclamo #{self.id} - {self.id_contribuyente}"
