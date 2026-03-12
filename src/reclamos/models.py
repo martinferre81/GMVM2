@@ -4,6 +4,8 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 from datetime import timedelta
+import os
+from uuid import uuid4
 
 
 
@@ -25,6 +27,21 @@ class EstadoReclamo(models.Model):
     def __str__(self):
         return self.nombre
 
+class Contribuyente(models.Model):
+
+    dni = models.CharField(max_length=15, unique=True)
+
+    apellido = models.CharField(max_length=100)
+    nombres = models.CharField(max_length=100)
+
+    telefono = models.CharField(max_length=30, blank=True)
+    email = models.EmailField(blank=True)
+
+    fecha_alta = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.apellido}, {self.nombres} - (DNI: {self.dni})"
+
 
 class Reclamo(models.Model):
 
@@ -37,8 +54,9 @@ class Reclamo(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reclamos_creados')
     usuario_ult_modificacion = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='reclamos_modificados')
 
-    id_contribuyente = models.IntegerField()
-
+    id_contribuyente = models.ForeignKey(Contribuyente,on_delete=models.SET_NULL,null=True,blank=True)
+    direccion = models.CharField(max_length=250, blank=True, null=True)
+    numero = models.CharField(max_length=20, unique=True, blank=True, null=True)
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
 
@@ -152,3 +170,26 @@ class HistorialReclamo(models.Model):
 
         def __str__(self):
             return f"Historial Reclamo {self.reclamo.id} - {self.accion}"
+
+
+class ReclamoFoto(models.Model):
+
+    def ruta_foto_reclamo(instance, filename):
+        extension = filename.split('.')[-1]
+        nombre_archivo = f"{uuid4()}.{extension}"
+        return f"reclamos/{instance.reclamo.id}/{nombre_archivo}"
+
+    reclamo = models.ForeignKey(
+        "Reclamo",
+        on_delete=models.CASCADE,
+        related_name="fotos"
+    )
+    imagen = models.ImageField(upload_to=ruta_foto_reclamo)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Foto reclamo {self.reclamo.id}"
+
+
+
+

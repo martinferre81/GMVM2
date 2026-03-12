@@ -131,17 +131,26 @@
 
                 <td>{{ reclamo.id_contribuyente }}</td>
                 <td class="text-center">
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <i class="fa-solid fa-pen text-primary editar-reclamo"
+                           style="cursor:pointer"
+                           data-id="{{ reclamo.id }}">
+                        </i>
+                        <i class="fa-solid fa-clock-rotate-left text-secondary ver-historial"
+                           style="cursor:pointer"
+                           data-id="{{ reclamo.id }}">
+                        </i>
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-camera text-secondary ver-fotos me-1"
+                               style="cursor:pointer"
+                               data-id="{{ reclamo.id }}">
+                            </i>
+                            <span>
+                                {{ reclamo.total_fotos }}
+                            </span>
 
-                    <i class="fa-solid fa-pen text-primary editar-reclamo me-2"
-                       style="cursor:pointer"
-                       data-id="{{ reclamo.id }}">
-                    </i>
-
-                    <i class="fa-solid fa-clock-rotate-left text-secondary ver-historial"
-                       style="cursor:pointer"
-                       data-id="{{ reclamo.id }}">
-                    </i>
-
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% empty %}
@@ -311,7 +320,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
-      <form method="POST">
+      <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="reclamo_id" id="reclamo_id">
         <div class="modal-header">
@@ -359,6 +368,15 @@
             <div class="col-12 mb-3">
               <label class="form-label">Descripción</label>
               {{ form.descripcion }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Fotos</label>
+                <input type="file"
+                       name="fotos"
+                       class="form-control"
+                       multiple
+                       accept="image/*">
             </div>
           </div>
 
@@ -455,6 +473,66 @@
     </div>
 </div>
 <!------------- FIN MODAL ELIMINAR RECLAMO ----------------------------->
+
+<!-----------------------MODAL GALERIA DE IMAGENES---------------------->
+<div class="modal fade" id="modalFotos">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-camera"></i> Fotos del reclamo
+                </h5>
+
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row" id="galeriaFotos"></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-----------------------FIN MODAL GALERIA DE IMAGENES---------------------->
+<!-----------------------MODAL ZOON PARA IMAGENES--------------------------->
+<div class="modal fade" id="modalZoom">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-body text-center">
+
+                <img id="imagenZoom"
+                     class="img-fluid rounded">
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!----------------------FIN MODAL ZOOM IMAGENES--------------------------->
+<!----------------------TOAST PARA MOSTRAR MENSAJES----------------------->
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
+
+    <div id="toastMensaje" class="toast align-items-center text-bg-success border-0 shadow-lg">
+        <div class="d-flex">
+
+            <div class="toast-body" id="toastTexto">
+                Operación realizada
+            </div>
+
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast">
+            </button>
+
+        </div>
+    </div>
+
+</div>
+<!----------------------FIN TOAST MENSAJES-------------------------------->
 
 
 
@@ -670,6 +748,83 @@ document.querySelectorAll(".ver-historial").forEach(icono => {
     })
 
 })
+document.querySelectorAll(".ver-fotos").forEach(btn => {
+    btn.addEventListener("click", function(){
+        let id = this.dataset.id
+        verFotos(id)
+    })
+})
+
+function verFotos(id){
+
+    fetch(`/reclamos/fotos/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+        let galeria = document.getElementById("galeriaFotos")
+        galeria.innerHTML = ""
+        if (data.length == 0) {
+                galeria.innerHTML = `<div class="text-center"><h5>No se encontraron imagenes para este reclamo</h5></div>`
+        }
+
+        data.forEach(f => {
+            console.log(f)
+            let col = document.createElement("div")
+            col.className = "col-md-3 mb-3"
+            galeria.innerHTML += `
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card shadow-sm">
+                                            <img src="${f.url}"
+                                                 class="card-img-top"
+                                                 style="height:150px; object-fit:cover; cursor:pointer"
+                                                 onclick="zoomFoto('${f.url}')">
+                                            <div class="card-body text-center p-2">
+                                                <a href="${f.url}" download class="btn btn-sm btn-success">
+                                                    <i class="fa-solid fa-download"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-danger"
+                                                        onclick="eliminarFoto(${f.id})">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `
+            galeria.appendChild(col)
+        })
+        new bootstrap.Modal(document.getElementById('modalFotos')).show()
+    })
+}
+
+function zoomFoto(url){
+    document.getElementById("imagenZoom").src = url
+    new bootstrap.Modal(document.getElementById('modalZoom')).show()
+}
+
+function eliminarFoto(id){
+    if(!confirm("Eliminar esta foto?")) return
+    fetch(`/reclamos/foto/eliminar/${id}/`)
+    .then(r => r.json())
+    .then(data => {
+        if(data.ret == 1){
+            mostrarToast("Se ha eliminado la imagen.")
+            setTimeout(() => {
+                location.reload()
+            }, 2800)
+
+        }
+    })
+}
+
+function mostrarToast(mensaje){
+
+    let toastEl = document.getElementById('toastMensaje')
+    let toastTexto = document.getElementById('toastTexto')
+    toastTexto.innerText = mensaje
+    let toast = new bootstrap.Toast(toastEl, {
+        delay: 2800
+    })
+    toast.show()
+}
 
 </script>
 

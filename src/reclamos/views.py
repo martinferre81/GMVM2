@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin  #Esto restringe las vistas si el usuario no tiene sesion
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from .models import Reclamo, HistorialReclamo
+from .models import Reclamo, HistorialReclamo, ReclamoFoto, Contribuyente
 from .forms import ReclamoForm
 from django.http import JsonResponse
 from .models import HistorialReclamo, EstadoReclamo
@@ -94,6 +94,8 @@ def inicio(request):
     # QUERY BASE (todos los reclamos del mes)
     reclamos = Reclamo.objects.select_related(
         'usuario', 'estado', 'tipo_reclamo'
+    ).annotate(
+        total_fotos=Count('fotos')
     ).filter(
         fecha_creacion__date__gte=fecha_desde,
         fecha_creacion__date__lte=fecha_hasta
@@ -120,6 +122,8 @@ def inicio(request):
     if request.GET.get("demorados"):
         reclamos = Reclamo.objects.select_related(
             'usuario', 'estado', 'tipo_reclamo'
+        ).annotate(
+        total_fotos=Count('fotos')
         ).filter(
             estado__nombre="EN_PROCESO",
             fecha_creacion__lt=timezone.now() - timedelta(days=5)
@@ -167,6 +171,24 @@ def inicio(request):
                 reclamo.fecha_cierre = timezone.now()
 
             reclamo.save()
+
+            #guardamos las fotos que se cargaron el en input
+            fotos = request.FILES.getlist("fotos")
+            cantidad_fotos = 0
+            for f in fotos:
+                ReclamoFoto.objects.create(
+                    reclamo=reclamo,
+                    imagen=f
+                )
+                cantidad_fotos = cantidad_fotos + 1
+
+            if cantidad_fotos > 0:
+                HistorialReclamo.objects.create(
+                    reclamo=reclamo,
+                    usuario=user,
+                    accion="Carga de imagenes",
+                    comentario=f"Se agregaron {cantidad_fotos} imagen/es"
+                )
 
             if reclamo_id:
                 cambios = False
@@ -446,3 +468,54 @@ def obtener_historial(request, id):
         })
 
     return JsonResponse(data, safe=False)
+
+def fotos_reclamo(request, id):
+    fotos = ReclamoFoto.objects.filter(reclamo_id=id)
+    data = []
+    for f in fotos:
+        data.append({
+            "id" : f.id,
+            "url": f.imagen.url,
+        })
+    return JsonResponse(data, safe=False)
+
+def eliminar_foto(request, id):
+    try:
+        foto = ReclamoFoto.objects.get(id=id)
+        foto.imagen.delete()
+        foto.delete()
+        return JsonResponse({"ret": 1})
+    except:
+        return JsonResponse({"ret": -1})
+
+def buscar_contribuyente(request):
+    dni = request.GET.get("dni")
+    try:
+        contribuyente = Contribuyente.objects.get(dni=dni)
+        data = {
+            "existe": True,
+            "apellido": contribuyente.apellido,
+            "nombres": contribuyente.nombres,
+            "telefono": contribuyente.telefono,
+            "email": contribuyente.email
+        }
+    except Contribuyente.DoesNotExist:
+
+        data = {
+            "existe": False
+        }
+
+    return JsonResponse(data)
+
+def portal_reclamos(request):
+    return render(request,"reclamos/portal.html")
+
+def reclamo_wizard(request):
+    tipos = TipoReclamo.objects.filter(activo=True).order_by("nombre")
+    return render(request,
+                  "reclamos/reclamo_wizard.html",
+                  {"tipos": tipos}
+                  )
+
+def consultar_reclamo(request):
+    return render(request, "reclamos/consultar_reclamo.html")
