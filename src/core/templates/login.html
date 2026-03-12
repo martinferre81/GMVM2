@@ -28,12 +28,32 @@ body{
     font-size:40px;
     color:#4ca1af;
 }
-form input{
+.form-control{
     width:100%;
 }
 .logo-login{
     width:130px;
     margin-bottom:10px;
+}
+
+.login-card{
+    width:380px;
+    border-radius:14px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border:1px solid rgba(255,255,255,0.4);
+}
+
+.logo-login{
+    width:80px;
+    margin-bottom:10px;
+    animation: flotar 4s ease-in-out infinite;
+}
+
+@keyframes flotar{
+    0%{transform:translateY(0px)}
+    50%{transform:translateY(-6px)}
+    100%{transform:translateY(0px)}
 }
 
 </style>
@@ -70,9 +90,16 @@ form input{
                 {{ form.username }}
             </div>
 
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label">Contraseña</label>
-                {{ form.password }}
+
+                <div class="input-group">
+                    {{ form.password }}
+
+                    <span class="input-group-text" id="togglePassword" style="cursor:pointer">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
+                </div>
             </div>
 
             <div class="d-grid">
@@ -85,8 +112,18 @@ form input{
         </form>
 
     </div>
-
 </div>
+
+<script>
+const togglePassword = document.querySelector("#togglePassword");
+const password = document.querySelector("#id_password");
+
+togglePassword.addEventListener("click", function () {
+    const type = password.getAttribute("type") === "password" ? "text" : "password";
+    password.setAttribute("type", type);
+    this.querySelector("i").classList.toggle("fa-eye-slash");
+});
+</script>
 
 </body>
 </html>

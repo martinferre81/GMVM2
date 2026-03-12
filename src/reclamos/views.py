@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Reclamo, HistorialReclamo
 from .forms import ReclamoForm
 from django.http import JsonResponse
-from .models import HistorialReclamo
+from .models import HistorialReclamo, EstadoReclamo
 from datetime import datetime
 from django.utils import timezone
 from .models import EstadoReclamo, TipoReclamo
@@ -368,6 +368,29 @@ def obtener_reclamo(request, id):
     }
 
     return JsonResponse(data)
+
+@login_required
+def eliminar_reclamo(request, id):
+    try:
+        reclamo = Reclamo.objects.get(id=id)
+
+        estado_anulado = EstadoReclamo.objects.get(nombre="ANULADO")
+
+        reclamo.estado = estado_anulado
+        reclamo.save()
+
+        return JsonResponse({
+            "id": reclamo.id,
+            "ret": 1
+        })
+
+    except Exception as e:
+
+        return JsonResponse({
+            "id": id,
+            "ret": -1,
+            "error": str(e)
+        })
 
 @login_required
 def obtener_historial(request, id):

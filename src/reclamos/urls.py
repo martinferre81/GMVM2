@@ -8,4 +8,5 @@ urlpatterns = [
     path('', views.lista_reclamos, name='lista_reclamos'),
     path('reclamo/<int:id>/', views.obtener_reclamo, name='obtener_reclamo'),
     path('reclamo/<int:id>/historial/', views.obtener_historial, name='obtener_historial'),
+    path('reclamo/anular/<int:id>/', views.eliminar_reclamo, name='eliminar_reclamo'),
 ]

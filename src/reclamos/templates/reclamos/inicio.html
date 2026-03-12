@@ -196,7 +196,7 @@
 {% block sidebar_right %}
 
 <!-- FRAME FILTROS -->
-<div class="card shadow-sm">
+<div class="card shadow-sm panel-lateral">
     <div class="card-header fw-bold">
         <i class="fa-solid fa-filter"></i> Filtros
     </div>
@@ -281,7 +281,7 @@
 </div>
 <!--FIN  FRAME FILTROS -->
 <!-- FRAME ACCIONES -->
-<div class="card mb-3 shadow-sm">
+<div class="card mb-3 shadow-sm panel-lateral">
     <div class="card-header fw-bold">
         <i class="fa-solid fa-gears"></i> Acciones
     </div>
@@ -297,7 +297,7 @@
             <i class="fa-solid fa-pen"></i> Editar
         </button>
 
-        <button class="btn btn-danger btn-sm" disabled>
+        <button class="btn btn-danger btn-sm" id="btnEliminar" disabled>
             <i class="fa-solid fa-trash"></i> Eliminar
         </button>
 
@@ -420,9 +420,46 @@
     </div>
   </div>
 </div>
+<!-- FIN MODAL HISTORIAL DE UN RECLAMO -->
+
+<!-- MODAL CONFIRMACION ELIMINAR RECLAMO -->
+<div class="modal fade" id="modalConfirmarAnular" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Confirmar anulación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                 El reclamo seleccionado esta por cambiar de estado.
+                ¿Está seguro que desea <b>anular este reclamo</b>?
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-danger" id="btnConfirmarAnular">
+                    <i class="fa-solid fa-trash"></i>
+                    Anular reclamo
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!------------- FIN MODAL ELIMINAR RECLAMO ----------------------------->
+
+
 
 <script>
-
+let reclamoAEliminar = null;
 
 var tabla = $('#tablaReclamos').DataTable({
     pageLength: 35,
@@ -451,6 +488,7 @@ document.querySelectorAll(".fila-reclamo").forEach(fila => {
 
         reclamoSeleccionado = this.dataset.id
         document.getElementById("btnEditar").disabled = false
+        document.getElementById("btnEliminar").disabled = false
     })
 
 })
@@ -505,6 +543,8 @@ function abrirEdicion(id){
 
 }
 
+
+
 document.querySelector('[data-bs-target="#modalReclamo"]').addEventListener("click", function(){
 
     document.getElementById("modalTitulo").innerHTML =
@@ -525,6 +565,78 @@ document.getElementById("btnEditar").addEventListener("click", function(){
     }
 
 })
+
+document.getElementById("btnEliminar").addEventListener("click", function(){
+    reclamoAEliminar = reclamoSeleccionado;
+
+    let modal = new bootstrap.Modal(document.getElementById('modalConfirmarAnular'));
+    modal.show();
+})
+
+document.getElementById("btnConfirmarAnular").addEventListener("click", function(){
+
+    if(reclamoSeleccionado){
+        document.getElementById("reclamo_id").value = reclamoSeleccionado
+        fetch(`/reclamo/anular/${reclamoAEliminar}/`)
+        .then(response => response.json())
+        .then(data => {
+
+            if(data.ret === 1){
+
+                let fila = document.querySelector(`tr[data-id="${reclamoAEliminar}"]`);
+
+                if(fila){
+
+                    let celdaEstado = fila.children[7];
+
+                    celdaEstado.innerHTML =
+                        '<span class="badge bg-dark badge-custom">ANULADO</span>';
+
+                    fila.classList.remove("table-danger");
+
+                }
+
+            }else{
+                alert("Error al anular el reclamo");
+            }
+
+            bootstrap.Modal.getInstance(
+                document.getElementById('modalConfirmarAnular')
+            ).hide();
+
+        });
+    }
+});
+
+
+function eliminarReclamo(id){
+    window.alert (id)
+    fetch(`/reclamo/anular/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+                if(data.ret === 1){
+
+                            // buscar la fila del reclamo
+                            let fila = document.querySelector(`tr[data-id="${id}"]`);
+
+                            if(fila){
+
+                                // buscar columna de estado (columna 8)
+                                let celdaEstado = fila.children[7];
+
+                                celdaEstado.innerHTML =
+                                    '<span class="badge bg-dark badge-custom">ANULADO</span>';
+
+                                // quitar color rojo si estaba demorado
+                                fila.classList.remove("table-danger");
+
+                            }
+
+                        }else{
+                            alert("Error al anular el reclamo");
+                        }
+    })
+}
 
 document.querySelectorAll(".ver-historial").forEach(icono => {
 
