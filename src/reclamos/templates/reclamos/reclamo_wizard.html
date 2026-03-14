@@ -11,13 +11,13 @@
 
 <style>
 
-.step{
-display:none;
-}
+    .step{
+        display:none;
+    }
 
-.step.active{
-display:block;
-}
+    .step.active{
+        display:block;
+    }
 
 </style>
 
@@ -27,9 +27,9 @@ display:block;
 
 <div class="container mt-5">
 
-<h3 class="text-center mb-4">
-Nuevo Reclamo
-</h3>
+    <h3 class="text-center mb-4">
+        Nuevo Reclamo
+    </h3>
 
 <!-- barra progreso -->
 
@@ -41,9 +41,9 @@ Paso 1 de 5
 
 </div>
 
-<form id="formReclamo">
+<form id="formReclamo" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
     <!-- PASO 1 -->
-
     <div class="step active">
         <h5>Datos personales</h5>
 

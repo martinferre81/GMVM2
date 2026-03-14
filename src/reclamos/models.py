@@ -7,9 +7,6 @@ from datetime import timedelta
 import os
 from uuid import uuid4
 
-
-
-
 class TipoReclamo(models.Model):
     nombre = models.CharField(max_length=50)
     descripcion = models.CharField(max_length=100)
@@ -76,10 +73,25 @@ class Reclamo(models.Model):
     fecha_ultima_modificacion = models.DateTimeField(auto_now=True)
     fecha_cierre = models.DateTimeField(null=True, blank=True)
 
-
     def save(self, *args, **kwargs):
+        # Generamos el número automático de reclamo
+        if not self.numero:
+            año = timezone.now().year
+            ultimo = Reclamo.objects.filter(
+                numero__startswith=f"VM-{año}"
+            ).order_by('-numero').first()
+
+            if ultimo:
+                ultimo_num = int(ultimo.numero.split("-")[2])
+                nuevo_num = ultimo_num + 1
+            else:
+                nuevo_num = 1
+
+            self.numero = f"VM-{año}-{nuevo_num:06d}"
+        # Si se finaliza el reclamo guardar fecha cierre
         if self.estado.nombre.lower() == "finalizado" and not self.fecha_cierre:
             self.fecha_cierre = timezone.now()
+
         super().save(*args, **kwargs)
 
     @property

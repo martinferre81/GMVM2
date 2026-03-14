@@ -12,3 +12,10 @@ class ReclamoForm(forms.ModelForm):
             "estado",
             "prioridad"
         ]
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            # Deshabilitar el contribuyente cuando se edita
+            self.fields["id_contribuyente"].disabled = True
+

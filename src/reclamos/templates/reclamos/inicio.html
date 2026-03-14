@@ -341,7 +341,7 @@
           <div class="row">
 
             <div class="col-md-6 mb-3">
-              <label class="form-label">ID Vecino</label>
+              <label class="form-label">Contribuyente</label>
               {{ form.id_contribuyente }}
             </div>
 
@@ -574,11 +574,9 @@ document.querySelectorAll(".fila-reclamo").forEach(fila => {
 document.querySelectorAll(".fila-reclamo").forEach(fila => {
 
     fila.addEventListener("dblclick", function(){
-
         let id = this.dataset.id
         document.getElementById("reclamo_id").value = id;
         abrirEdicion(id)
-
     })
 
 })
@@ -598,17 +596,18 @@ document.querySelectorAll(".editar-reclamo").forEach(icono => {
 
 function abrirEdicion(id){
 
-    fetch(`/reclamo/${id}/`)
+    fetch(`/reclamos/${id}/`)
     .then(response => response.json())
     .then(data => {
+        console.log(data)
         document.getElementById("modalTitulo").innerHTML =
             '<i class="fa-solid fa-pen"></i> Editar Reclamo #' + data.id
 
         document.getElementById("btnGuardar").innerText = "Actualizar"
         document.querySelector("[name='comentario_operador']").value = ""
         document.getElementById("reclamo_id").value = data.id
-        document.getElementById("id_id_contribuyente").readOnly = true
         document.getElementById("id_id_contribuyente").value = data.id_contribuyente
+        document.getElementById("id_id_contribuyente").disabled = true
         document.getElementById("id_titulo").value = data.titulo
         document.getElementById("id_descripcion").value = data.descripcion
         document.getElementById("id_prioridad").value = data.prioridad
@@ -655,7 +654,7 @@ document.getElementById("btnConfirmarAnular").addEventListener("click", function
 
     if(reclamoSeleccionado){
         document.getElementById("reclamo_id").value = reclamoSeleccionado
-        fetch(`/reclamo/anular/${reclamoAEliminar}/`)
+        fetch(`/reclamos/anular/${reclamoAEliminar}/`)
         .then(response => response.json())
         .then(data => {
 
@@ -689,7 +688,7 @@ document.getElementById("btnConfirmarAnular").addEventListener("click", function
 
 function eliminarReclamo(id){
     window.alert (id)
-    fetch(`/reclamo/anular/${id}/`)
+    fetch(`/reclamos/anular/${id}/`)
     .then(response => response.json())
     .then(data => {
                 if(data.ret === 1){
@@ -721,7 +720,7 @@ document.querySelectorAll(".ver-historial").forEach(icono => {
     icono.addEventListener("click", function(){
         let id = this.dataset.id
 
-        fetch(`/reclamo/${id}/historial/`)
+        fetch(`/reclamos/${id}/historial/`)
         .then(response => response.json())
         .then(data => {
 

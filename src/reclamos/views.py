@@ -1,5 +1,6 @@
 import calendar
 
+from django.contrib.auth.models import User
 from django.db.models.functions import ExtractMonth
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -381,7 +382,7 @@ def obtener_reclamo(request, id):
 
     data = {
         "id": reclamo.id,
-        "id_contribuyente": reclamo.id_contribuyente,
+        "id_contribuyente": reclamo.id_contribuyente.id if reclamo.id_contribuyente else "",
         "titulo": reclamo.titulo,
         "descripcion": reclamo.descripcion,
         "prioridad": reclamo.prioridad,
@@ -490,32 +491,93 @@ def eliminar_foto(request, id):
 
 def buscar_contribuyente(request):
     dni = request.GET.get("dni")
-    try:
-        contribuyente = Contribuyente.objects.get(dni=dni)
-        data = {
+    if not dni:
+        return JsonResponse({"existe": False})
+
+    contribuyente = Contribuyente.objects.filter(dni=dni).first()
+    if contribuyente:
+        return JsonResponse({
             "existe": True,
             "apellido": contribuyente.apellido,
             "nombres": contribuyente.nombres,
             "telefono": contribuyente.telefono,
             "email": contribuyente.email
-        }
-    except Contribuyente.DoesNotExist:
-
-        data = {
-            "existe": False
-        }
-
-    return JsonResponse(data)
+        })
+    return JsonResponse({"existe": False})
 
 def portal_reclamos(request):
     return render(request,"reclamos/portal.html")
 
 def reclamo_wizard(request):
+
+    if request.method == "POST":
+
+        dni = request.POST.get("dni")
+        apellido = request.POST.get("apellido")
+        nombres = request.POST.get("nombres")
+        telefono = request.POST.get("telefono")
+        email = request.POST.get("email")
+
+        tipo_id = request.POST.get("tipo")
+
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        direccion = request.POST.get("direccion")
+
+        contribuyente, creado = Contribuyente.objects.get_or_create(
+            dni=dni,
+            defaults={
+                "apellido": apellido,
+                "nombres": nombres,
+                "telefono": telefono,
+                "email": email
+            }
+        )
+
+        estado = EstadoReclamo.objects.get(nombre="INGRESO")
+
+        tipo = TipoReclamo.objects.get(id=tipo_id)
+
+        usuario = User.objects.first()
+
+        reclamo = Reclamo.objects.create(
+            usuario=usuario,
+            id_contribuyente=contribuyente,
+            direccion=direccion,
+            titulo=titulo,
+            descripcion=descripcion,
+            tipo_reclamo=tipo,
+            estado=estado,
+            prioridad=1
+        )
+
+        fotos = request.FILES.getlist("fotos")
+
+        for foto in fotos:
+            ReclamoFoto.objects.create(
+                reclamo=reclamo,
+                imagen=foto
+            )
+
+        return redirect("reclamo_confirmado", numero=reclamo.numero)
+
     tipos = TipoReclamo.objects.filter(activo=True).order_by("nombre")
-    return render(request,
-                  "reclamos/reclamo_wizard.html",
-                  {"tipos": tipos}
-                  )
+
+    return render(
+        request,
+        "reclamos/reclamo_wizard.html",
+        {"tipos": tipos}
+    )
+
+def reclamo_confirmado(request, numero):
+    reclamo = Reclamo.objects.get(numero=numero)
+    return render(
+        request,
+        "reclamos/reclamo_confirmado.html",
+        {
+            "reclamo": reclamo
+        }
+    )
 
 def consultar_reclamo(request):
     return render(request, "reclamos/consultar_reclamo.html")
