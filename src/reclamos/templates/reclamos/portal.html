@@ -43,6 +43,51 @@ body{
     font-size:14px;
     color:#777;
 }
+.timeline-reclamo{
+    display:flex;
+    justify-content:space-between;
+    position:relative;
+    margin-top:20px;
+}
+
+.timeline-reclamo::before{
+    content:"";
+    position:absolute;
+    top:20px;
+    left:0;
+    right:0;
+    height:4px;
+    background:#dee2e6;
+    z-index:0;
+}
+.timeline-step{
+    text-align:center;
+    position:relative;
+    z-index:1;
+    width:33%;
+}
+.timeline-icon{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:#dee2e6;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:auto;
+    font-size:18px;
+}
+.timeline-step.active .timeline-icon{
+    background:#0d6efd;
+}
+.timeline-step.done .timeline-icon{
+    background:#28a745;
+}
+.timeline-label{
+    margin-top:8px;
+    font-size:14px;
+}
 
 </style>
 
@@ -63,28 +108,28 @@ body{
 
 <div class="container mt-5">
 
-<div class="row justify-content-center">
+    <div class="row justify-content-center">
 
-<div class="col-lg-6">
+    <div class="col-lg-6">
 
-<!-- BIENVENIDA -->
+    <!-- BIENVENIDA -->
 
-<div class="card card-portal mb-4">
+    <div class="card card-portal mb-4">
 
-<div class="card-body text-center">
+    <div class="card-body text-center">
 
-<h4 class="mb-3">Bienvenido</h4>
+    <h4 class="mb-3">Bienvenido</h4>
 
-<p>
-Utilice este sistema para informar problemas en la vía pública.
-Su reclamo será derivado al área correspondiente.
-</p>
+    <p>
+    Utilice este sistema para informar problemas en la vía pública.
+    Su reclamo será derivado al área correspondiente.
+    </p>
 
-<a href="{% url 'reclamo_wizard' %}" class="btn btn-primary btn-reclamo w-100 mt-3">
-Ingresar Reclamo
-</a>
+    <a href="{% url 'reclamo_wizard' %}" class="btn btn-primary btn-reclamo w-100 mt-3">
+    Ingresar Reclamo
+    </a>
 
-</div>
+    </div>
 </div>
 
 <!-- CONSULTAR RECLAMO -->
@@ -95,27 +140,153 @@ Ingresar Reclamo
 
 <h5 class="mb-3 text-center">Consultar estado de un reclamo</h5>
 
-<form method="GET" action="{% url 'consultar_reclamo' %}">
+<form method="get" action="{% url 'consultar_reclamo' %}">
+         {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">DNI</label>
+            <input type="text" name="dni" class="form-control" required>
+        </div>
 
-<div class="mb-3">
+        <div class="mb-3">
+            <label class="form-label">Número de reclamo</label>
+            <input type="text" name="numero" class="form-control" required>
+        </div>
 
-<label class="form-label">DNI</label>
-<input type="text" name="dni" class="form-control" required>
-
-</div>
-
-<div class="mb-3">
-
-<label class="form-label">Número de reclamo</label>
-<input type="text" name="numero" class="form-control" required>
-
-</div>
-
-<button class="btn btn-success w-100">
-Consultar
-</button>
+        <button class="btn btn-success w-100">
+            Consultar
+        </button>
 
 </form>
+    {% if error %}
+        <div class="alert alert-danger mt-4 text-center">
+        {{ error }}
+        </div>
+
+    {% endif %}
+    {% if reclamo %}
+
+        <div class="card card-portal mt-4">
+
+            <div class="card-body">
+
+                <div class="timeline-reclamo">
+                    <div class="timeline-step
+                            {% if reclamo.estado.nombre == 'INGRESO' or reclamo.estado.nombre == 'EN_PROCESO' or reclamo.estado.nombre == 'FINALIZADO' %}
+                            done
+                            {% endif %}
+                            ">
+
+                            <div class="timeline-icon">
+                                <i class="fa-solid fa-file-circle-plus"></i>
+                            </div>
+
+                            <div class="timeline-label">
+                                Ingreso
+                            </div>
+
+                    </div>
+
+
+                        <div class="timeline-step
+                        {% if reclamo.estado.nombre == 'EN_PROCESO' %}
+                        active
+                        {% elif reclamo.estado.nombre == 'FINALIZADO' %}
+                        done
+                        {% endif %}
+                        ">
+
+                            <div class="timeline-icon">
+                                <i class="fa-solid fa-gear"></i>
+                            </div>
+                            <div class="timeline-label">
+                                En proceso
+                            </div>
+                        </div>
+
+                        <div class="timeline-step
+                        {% if reclamo.estado.nombre == 'FINALIZADO' %}
+                        done
+                        {% endif %}
+                        ">
+                            <div class="timeline-icon">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="timeline-label">
+                                Finalizado
+                            </div>
+                        </div>
+                </div>
+
+                <h5 class="mb-3 text-center">
+                     Estado del reclamo {{ reclamo.numero }}
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Estado</strong><br>
+                        <span class="badge bg-warning">
+                        {{ reclamo.estado }}
+                            </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Tipo</strong><br>
+                        {{ reclamo.tipo_reclamo }}
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <strong>Fecha</strong><br>
+                            {{ reclamo.fecha_creacion }}
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <strong>Dirección</strong><br>
+                            {{ reclamo.direccion }}
+                    </div>
+                </div>
+            <hr>
+                <strong>Título</strong>
+            <p>
+                {{ reclamo.titulo }}
+            </p>
+            <strong>Descripción</strong>
+            <p>
+                {{ reclamo.descripcion }}
+            </p>
+        </div>
+    </div>
+
+    {% endif %}
+    {% if historial %}
+
+    <div class="card card-portal mt-4">
+
+        <div class="card-body">
+
+          <h5 class="mb-3 text-center">
+                Historial del reclamo
+          </h5>
+
+           <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Acción</th>
+                        <th>Comentario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in historial %}
+                    <tr>
+                        <td>{{ h.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ h.accion }}</td>
+                        <td>{{ h.comentario|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+           </table>
+
+        </div>
+
+    </div>
+    {% endif %}
 
 </div>
 
@@ -129,12 +300,20 @@ Consultar
 
 <!-- FOOTER -->
 
-<div class="footer">
+<!-- FOOTER -->
+<footer class="text-center py-3 mt-4">
 
-Municipalidad de Valle María<br>
-Tel: (0343) xxxx-xxxx
+        Municipalidad de Valle Maria <br>
 
-</div>
+    <div>
+        Desarrollado por <strong>MEF Sistemas</strong> © 2026
+    </div>
+    <div>
+        <a href="#"><i class="fa-brands fa-facebook"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-twitter"></i></a>
+    </div>
+</footer>
 
 </body>
 </html>

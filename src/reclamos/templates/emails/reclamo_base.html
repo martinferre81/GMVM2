@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .content {
+            padding: 20px;
+            color: #333;
+        }
+
+        .box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: #198754;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        Municipalidad de Valle María
+    </div>
+
+    <div class="content">
+        <p>Hola {{ nombre }},</p>
+
+        <p>{{ mensaje_principal }}</p>
+
+        <div class="box">
+            <strong>Número:</strong> {{ numero }}<br>
+            <strong>Título:</strong> {{ titulo }}<br>
+            <strong>Estado:</strong> {{ estado }}<br>
+            <strong>Fecha:</strong> {{ fecha }}
+        </div>
+
+        <a href="{{ url }}" class="button">
+            Ver estado del reclamo
+        </a>
+    </div>
+
+    <div class="footer">
+        Este es un mensaje automático. No responder.<br>
+        Municipalidad de Valle María
+    </div>
+
+</div>
+
+</body>
+</html>

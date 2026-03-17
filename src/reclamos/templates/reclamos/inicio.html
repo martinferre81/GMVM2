@@ -153,10 +153,6 @@
                     </div>
                 </td>
             </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center">No se encontraron reclamos con los filtros aplicados</td>
-            </tr>
             {% endfor %}
             </tbody>
     </table>
@@ -259,25 +255,15 @@
             </div>
 
             <div class="mb-2">
-                <label class="form-label">Prioridad</label>
-                <select class="form-select form-select-sm" name="prioridad">
-                    <option value="">Todas</option>
-                    <option value="3" {% if request.GET.prioridad == "3" %}selected{% endif %}>Alta</option>
-                    <option value="2" {% if request.GET.prioridad == "2" %}selected{% endif %}>Media</option>
-                    <option value="1" {% if request.GET.prioridad == "1" %}selected{% endif %}>Baja</option>
-                </select>
-            </div>
-
-            <div class="mb-2">
                 <label class="form-label">Vecino</label>
-                <select name="vecino" class="form-select">
+                <select name="vecino" class="form-select form-select-sm select2-sidebar">
                     <option value="">Todos</option>
                     {% for v in vecinos %}
-                    <option value="{{v.id}}" {% if request.GET.vecino == v.id|stringformat:"s" %}selected{% endif %}>
-                    {{v.nombre}}
+                    <option value="{{v.id}}"
+                        {% if request.GET.vecino == v.id|stringformat:"s" %}selected{% endif %}>
+                        {{v}}
                     </option>
                     {% endfor %}
-
                 </select>
             </div>
 
@@ -317,91 +303,119 @@
 
 <!-- MODAL NUEVO RECLAMO -->
 <div class="modal fade" id="modalReclamo" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content shadow-sm">
 
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="reclamo_id" id="reclamo_id">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalTitulo">
-                <i class="fa-solid fa-plus"></i> Nuevo Reclamo
-          </h5>
+
+        <!-- HEADER -->
+        <div class="modal-header py-2 px-3">
+          <h6 class="modal-title mb-0" id="modalTitulo">
+            <i class="fa-solid fa-plus me-1 text-primary"></i>
+            Nuevo Reclamo
+          </h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-          {% if form.errors %}
-            <div class="alert alert-danger">
-                {{ form.errors }}
-            </div>
-          {% endif %}
+        <!-- ERRORES -->
+        {% if form.errors %}
+        <div class="alert alert-danger m-2 py-2 small">
+          {{ form.errors }}
+        </div>
+        {% endif %}
 
-        <div class="modal-body">
+        <!-- BODY -->
+        <div class="modal-body px-3 py-2 small">
 
-          <div class="row">
+          <!-- BLOQUE PRINCIPAL -->
+          <div class="row g-2">
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Contribuyente</label>
+            <!-- 👤 CONTRIBUYENTE -->
+            <div class="col-12">
+              <label class="form-label mb-1 fw-semibold">Contribuyente</label>
               {{ form.id_contribuyente }}
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Tipo</label>
-              {{ form.tipo_reclamo }}
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Estado</label>
-              {{ form.estado }}
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Prioridad</label>
-              {{ form.prioridad }}
-            </div>
-
-            <div class="col-12 mb-3">
-              <label class="form-label">Título</label>
+            <!-- 📝 TITULO -->
+            <div class="col-12">
+              <label class="form-label mb-1">Título</label>
               {{ form.titulo }}
             </div>
 
-            <div class="col-12 mb-3">
-              <label class="form-label">Descripción</label>
+            <!-- 🧾 DESCRIPCION -->
+            <div class="col-12">
+              <label class="form-label mb-1">Descripción</label>
               {{ form.descripcion }}
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Fotos</label>
-                <input type="file"
-                       name="fotos"
-                       class="form-control"
-                       multiple
-                       accept="image/*">
+          </div>
+
+          <!-- ⚙️ BLOQUE SEPARADO -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <div class="border rounded p-2 bg-light-subtle">
+
+                <div class="row g-2">
+
+                  <div class="col-md-4 d-flex flex-column">
+                    <label class="form-label mb-1">Tipo</label>
+                    {{ form.tipo_reclamo }}
+                  </div>
+
+                  <div class="col-md-4 d-flex flex-column">
+                    <label class="form-label mb-1">Estado</label>
+                    {{ form.estado }}
+                  </div>
+
+                  <div class="col-md-4 d-flex flex-column">
+                      <label class="form-label mb-1">Prioridad</label>
+                      {{ form.prioridad }}
+                  </div>
+
+                </div>
+
+              </div>
             </div>
           </div>
 
-            <div class="col-12 mb-3">
-                <label class="form-label">Observación operador</label>
-                <textarea name="comentario_operador" class="form-control" rows="4" placeholder="Observación o detalle del cambio realizado..."></textarea>
+          <!-- 📷 FOTOS -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <label class="form-label mb-1">Fotos</label>
+              <input type="file"
+                     name="fotos"
+                     class="form-control form-control-sm"
+                     multiple
+                     accept="image/*">
             </div>
+          </div>
+
+          <!-- 🧑‍💻 OBSERVACION -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <label class="form-label mb-1">Observación operador</label>
+              <textarea name="comentario_operador"
+                        class="form-control form-control-sm"
+                        rows="3"
+                        placeholder="Detalle del cambio..."></textarea>
+            </div>
+          </div>
 
         </div>
 
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success" id="btnGuardar">
-             Guardar
-          </button>
-          <button type="button" class="btn btn-secondary"
-                  data-bs-dismiss="modal">
-              Cancelar
-          </button>
+        <!-- FOOTER -->
+        <div class="modal-footer py-2 px-3">
+          <button type="submit" class="btn btn-sm btn-success" id="btnGuardar"> <i class="fa-solid fa-check me-1"></i> Guardar </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal"> Cancelar </button>
         </div>
+
       </form>
 
     </div>
   </div>
 </div>
-
 <!-- MODAL HISTORIAL DE UN RECLAMO -->
 <div class="modal fade" id="modalHistorial" tabindex="-1">
   <div class="modal-dialog modal-lg modal-historial">
@@ -540,6 +554,10 @@
 let reclamoAEliminar = null;
 
 var tabla = $('#tablaReclamos').DataTable({
+    language: {
+        emptyTable: "No se encontraron reclamos",
+        zeroRecords: "No se encontraron coincidencias con los filtros"
+    },
     pageLength: 35,
     dom: 'rt',
     paging: false,

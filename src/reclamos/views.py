@@ -1,4 +1,5 @@
 import calendar
+from os import write
 
 from django.contrib.auth.models import User
 from django.db.models.functions import ExtractMonth
@@ -20,6 +21,7 @@ from django.db.models import Count
 from django.utils.timezone import now
 from django.db.models import Avg, F, ExpressionWrapper, DurationField
 from datetime import timedelta
+from .utils_email import enviar_mail_reclamo_async_html
 
 
 # Create your views here.
@@ -102,6 +104,8 @@ def inicio(request):
         fecha_creacion__date__lte=fecha_hasta
     )
 
+
+
     # Filtros adicionales
     estado = request.GET.get('estado')
     vecino = request.GET.get('vecino')
@@ -132,8 +136,8 @@ def inicio(request):
 
     form = ReclamoForm()
 
-
     if request.method == 'POST':
+        print ("Entra por request.method == 'POST'")
         reclamo_id = request.POST.get('reclamo_id')
 
         estado_anterior = None
@@ -160,6 +164,9 @@ def inicio(request):
 
         if form.is_valid():
             reclamo = form.save(commit=False)
+
+            es_nuevo = reclamo._state.adding
+
             if reclamo_id:
                 reclamo.id_contribuyente = vecino_original
 
@@ -172,6 +179,11 @@ def inicio(request):
                 reclamo.fecha_cierre = timezone.now()
 
             reclamo.save()
+            #Enviamos mail al contribuyente por un nuevo reclamo
+
+            if (es_nuevo and reclamo.id_contribuyente.email):
+                print("Enviando mail")
+                enviar_mail_reclamo_async_html(reclamo,f"Reclamo recibido Nº {reclamo.numero}","Su reclamo fue registrado correctamente.")
 
             #guardamos las fotos que se cargaron el en input
             fotos = request.FILES.getlist("fotos")
@@ -233,6 +245,23 @@ def inicio(request):
 
                 if cambios or comentario_operador:
                     historial.save()
+
+                    if estado_anterior != reclamo.estado and reclamo.estado.nombre == "FINALIZADO":
+                        # Solo enviamos si cambiamos el estado a Finalizado, si es otra modificacion no se envia notificacion
+                        enviar_mail_reclamo_async_html(
+                            reclamo,
+                            f"Reclamo Nº {reclamo.numero} finalizado",
+                            "Su reclamo ha sido resuelto. ¡Gracias por comunicarse con nosotros!"
+                        )
+
+                    else:
+                        #Solo enviamos si cambiamos el estado, si es otra modificacion no se envia notificacion
+                        if estado_anterior != reclamo.estado:
+                            enviar_mail_reclamo_async_html(
+                                reclamo,
+                                f"Actualización de reclamo Nº {reclamo.numero}",
+                                f"El estado de su reclamo cambió a: {reclamo.estado}"
+                            )
             else:
                 HistorialReclamo.objects.create(
                     reclamo=reclamo,
@@ -295,6 +324,7 @@ def inicio(request):
 
     labels_estado = [r['estado__nombre'] for r in reclamos_estado]
     data_estado = [r['total'] for r in reclamos_estado]
+    vecinos = Contribuyente.objects.all().order_by('apellido')
 
     return render(request, 'reclamos/inicio.html', {
         'reclamos': reclamos,
@@ -316,7 +346,8 @@ def inicio(request):
         'labels_meses': labels_meses,
         'data_meses': data_meses,
         'labels_estado': labels_estado,
-        'data_estado': data_estado
+        'data_estado': data_estado,
+        'vecinos' : vecinos
     })
 
 
@@ -551,6 +582,14 @@ def reclamo_wizard(request):
             prioridad=1
         )
 
+        # Enviamos el mail al contribuyente
+        if contribuyente.email:
+            enviar_mail_reclamo_async_html(
+                reclamo,
+                f"Reclamo recibido Nº {reclamo.numero}",
+                "Su reclamo fue registrado correctamente."
+            )
+
         fotos = request.FILES.getlist("fotos")
 
         for foto in fotos:
@@ -579,5 +618,35 @@ def reclamo_confirmado(request, numero):
         }
     )
 
+
 def consultar_reclamo(request):
-    return render(request, "reclamos/consultar_reclamo.html")
+    numero = request.GET.get("numero")
+    dni = request.GET.get("dni")
+
+    reclamo = None
+    historial = None
+    error = None
+
+    if numero and dni:
+        try:
+            reclamo = Reclamo.objects.select_related(
+                "estado",
+                "tipo_reclamo",
+                "id_contribuyente"
+            ).get(
+                numero=numero,
+                id_contribuyente__dni=dni
+            )
+            historial = reclamo.historial.all().order_by("fecha")
+        except Reclamo.DoesNotExist:
+            error = "No se encontró el reclamo con los datos ingresados"
+
+    return render(
+        request,
+        "reclamos/portal.html",
+        {
+            "reclamo": reclamo,
+            "historial": historial,
+            "error": error
+        }
+    )

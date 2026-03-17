@@ -1,10 +1,164 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "reclamos/base_consulta_reclamo.html" %}
+{% block content %}
+<div class="container mt-4">
 
-</body>
-</html>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Consultar estado del reclamo
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form method="get">
+                    {% csrf_token %}
+                    <div class="row">
+
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">Número de reclamo</label>
+                            <input
+                                type="text"
+                                name="numero"
+                                class="form-control"
+                                placeholder="VM-2026-000015"
+                                required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">DNI</label>
+                            <input
+                                type="text"
+                                name="dni"
+                                class="form-control"
+                                placeholder="Ej: 28456789"
+                                required>
+                        </div>
+                        <div class="col-md-3 mb-3 d-flex align-items-end">
+                            <button class="btn btn-primary w-100">
+                                <i class="fa-solid fa-search"></i>
+                                Consultar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% if error %}
+<div class="row justify-content-center mt-3">
+    <div class="col-md-8">
+        <div class="alert alert-danger">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ error }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if reclamo %}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-ticket"></i>
+                    Reclamo {{ reclamo.numero }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Estado</strong><br>
+                        <span class="badge bg-warning">
+                            {{ reclamo.estado }}
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Tipo</strong><br>
+                        {{ reclamo.tipo_reclamo }}
+                    </div>
+
+                    <div class="col-md-6 mt-3">
+                        <strong>Fecha creación</strong><br>
+                        {{ reclamo.fecha_creacion }}
+                    </div>
+
+                    <div class="col-md-6 mt-3">
+                        <strong>Dirección</strong><br>
+                        {{ reclamo.direccion }}
+                    </div>
+
+                </div>
+                <hr>
+                    <strong>Título</strong>
+                <p>
+                    {{ reclamo.titulo }}
+                </p>
+                <strong>Descripción</strong>
+                <p>
+                    {{ reclamo.descripcion }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+
+{% if historial %}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Historial del reclamo
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Acción</th>
+                            <th>Comentario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in historial %}
+
+                        <tr>
+                            <td>
+                                {{ h.fecha|date:"d/m/Y H:i" }}
+                            </td>
+                            <td>
+                                {{ h.accion }}
+                            </td>
+                            <td>
+                                {{ h.comentario|default:"—" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+
+</div>
+
+{% endblock %}
