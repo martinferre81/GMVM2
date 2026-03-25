@@ -74,25 +74,20 @@ class Reclamo(models.Model):
     fecha_cierre = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Generamos el número automático de reclamo
-        if not self.numero:
-            año = timezone.now().year
-            ultimo = Reclamo.objects.filter(
-                numero__startswith=f"VM-{año}"
-            ).order_by('-numero').first()
+        is_new = self.pk is None
 
-            if ultimo:
-                ultimo_num = int(ultimo.numero.split("-")[2])
-                nuevo_num = ultimo_num + 1
-            else:
-                nuevo_num = 1
+        super().save(*args, **kwargs)  # 🔥 primero guarda para tener ID
 
-            self.numero = f"VM-{año}-{nuevo_num:06d}"
-        # Si se finaliza el reclamo guardar fecha cierre
+        # Generar número solo si es nuevo
+        if is_new and not self.numero:
+            año = self.fecha_creacion.year
+            self.numero = f"VM-{año}-{self.id:06d}"
+            super().save(update_fields=['numero'])
+
+        # Fecha de cierre
         if self.estado.nombre.lower() == "finalizado" and not self.fecha_cierre:
             self.fecha_cierre = timezone.now()
-
-        super().save(*args, **kwargs)
+            super().save(update_fields=['fecha_cierre'])
 
     @property
     def esta_demorado(self):

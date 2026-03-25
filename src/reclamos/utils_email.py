@@ -14,7 +14,7 @@ def enviar_mail_reclamo_html(reclamo, asunto, mensaje_principal):
         "estado": reclamo.estado,
         "fecha": reclamo.fecha_creacion,
         "mensaje_principal": mensaje_principal,
-        "url": "http://localhost:8087/reclamos/portal/"
+        "url": f"www.reclamos.municipalidadvallemaria.com?numero={reclamo.numero}"
     })
     email = EmailMultiAlternatives(
         subject=asunto,

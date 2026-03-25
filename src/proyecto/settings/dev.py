@@ -14,6 +14,14 @@ DEFAULT_FROM_EMAIL = "Municipalidad de Valle María <martinlisandro.of@gmail.com
 
 ALLOWED_HOSTS = ["*"]
 
+# 🔒 Trusted origins para CSRF con Cloudflare
+CSRF_TRUSTED_ORIGINS = [
+    'https://reclamos.municipalidadvallemaria.com'
+]
+
+# 📌 Redirección después del login
+LOGIN_REDIRECT_URL = '/reclamos/'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

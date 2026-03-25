@@ -23,7 +23,4 @@ class ReclamoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # 👇 SOLO deshabilitar si es edición
-        if self.instance and self.instance.pk:
-            self.fields["id_contribuyente"].disabled = True
+        

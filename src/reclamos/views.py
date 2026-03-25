@@ -25,7 +25,7 @@ from .utils_email import enviar_mail_reclamo_async_html
 
 
 # Create your views here.
-@login_required
+@login_required(login_url='/login/')
 def inicio(request):
     user = request.user
 
@@ -71,7 +71,7 @@ def inicio(request):
         dias = tiempo_promedio.days
         tiempo_promedio = f"{dias} días"
     else:
-        tiempo_promedio = "-"
+         tiempo_promedio = "-"
 
     # Fechas predeterminadas para el mes
     primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
@@ -104,7 +104,17 @@ def inicio(request):
         fecha_creacion__date__lte=fecha_hasta
     )
 
+    # FILTRO POR GRUPO (Siempre asignar un grupo, sino muestra todo al usuario)
+    if request.user.groups.filter(name="ADMINISTRADOR").exists():
+        pass
+    else:
+        grupos = list(request.user.groups.values_list('name', flat=True))
 
+        if grupos:
+            reclamos = reclamos.filter(tipo_reclamo__nombre__in=grupos
+       )
+        else:
+            reclamos = reclamos.none()
 
     # Filtros adicionales
     estado = request.GET.get('estado')
@@ -240,7 +250,7 @@ def inicio(request):
 
                 if vecino_anterior != reclamo.id_contribuyente:
                     historial.vecino_anterior = vecino_anterior
-                    historial.vecino_nuevo = reclamo.id_contribuyente
+                    historial.vecino_nuevo = reclamo.id_contribuyente.id if reclamo.id_contribuyente else None
                     cambios = True
 
                 if cambios or comentario_operador:
@@ -273,10 +283,11 @@ def inicio(request):
                     prioridad_nueva=reclamo.prioridad,
                     titulo_nuevo=reclamo.titulo,
                     descripcion_nueva=reclamo.descripcion,
-                    vecino_nuevo=reclamo.id_contribuyente,
+                    vecino_nuevo=reclamo.id_contribuyente.id if reclamo.id_contribuyente else None,
                 )
 
-            return redirect('inicio')
+            return redirect('dashboard')
+
 
     # Filtra los estados y tipos activos
     estados = EstadoReclamo.objects.filter(activo=True)
@@ -351,7 +362,7 @@ def inicio(request):
     })
 
 
-@login_required
+@login_required(login_url='/login/')
 def lista_reclamos(request):
 
     reclamos = Reclamo.objects.all()
@@ -406,24 +417,33 @@ def lista_reclamos(request):
 
     })
 
-@login_required
+@login_required(login_url='/login/')
 def obtener_reclamo(request, id):
-
-    reclamo = Reclamo.objects.get(id=id)
+    try:
+        reclamo = Reclamo.objects.select_related(
+            'id_contribuyente', 'estado', 'tipo_reclamo'
+        ).get(id=id)
+    except Reclamo.DoesNotExist:
+        return JsonResponse({"error": "Reclamo no encontrado"}, status=404)
+    except Exception as e:
+        # Captura cualquier otro error inesperado
+        return JsonResponse({"error": str(e)}, status=500)
 
     data = {
         "id": reclamo.id,
-        "id_contribuyente": reclamo.id_contribuyente.id if reclamo.id_contribuyente else "",
-        "titulo": reclamo.titulo,
-        "descripcion": reclamo.descripcion,
-        "prioridad": reclamo.prioridad,
-        "estado": reclamo.estado.id,
-        "tipo_reclamo": reclamo.tipo_reclamo.id
+        "id_contribuyente": reclamo.id_contribuyente.id if reclamo.id_contribuyente else None,
+        "titulo": reclamo.titulo or "",
+        "descripcion": reclamo.descripcion or "",
+        "prioridad": reclamo.prioridad if reclamo.prioridad is not None else 0,
+        "estado": reclamo.estado.id if reclamo.estado else None,
+        "tipo_reclamo": reclamo.tipo_reclamo.id if reclamo.tipo_reclamo else None
     }
 
     return JsonResponse(data)
 
-@login_required
+
+
+@login_required(login_url='/login/')
 def eliminar_reclamo(request, id):
     try:
         reclamo = Reclamo.objects.get(id=id)
@@ -446,7 +466,7 @@ def eliminar_reclamo(request, id):
             "error": str(e)
         })
 
-@login_required
+@login_required(login_url='/login/')
 def obtener_historial(request, id):
 
     historial = HistorialReclamo.objects.filter(
@@ -618,7 +638,6 @@ def reclamo_confirmado(request, numero):
         }
     )
 
-
 def consultar_reclamo(request):
     numero = request.GET.get("numero")
     dni = request.GET.get("dni")
@@ -628,25 +647,36 @@ def consultar_reclamo(request):
     error = None
 
     if numero and dni:
-        try:
-            reclamo = Reclamo.objects.select_related(
-                "estado",
-                "tipo_reclamo",
-                "id_contribuyente"
-            ).get(
-                numero=numero,
-                id_contribuyente__dni=dni
-            )
-            historial = reclamo.historial.all().order_by("fecha")
-        except Reclamo.DoesNotExist:
-            error = "No se encontró el reclamo con los datos ingresados"
+        numero = numero.strip().upper()
 
-    return render(
-        request,
-        "reclamos/portal.html",
-        {
-            "reclamo": reclamo,
-            "historial": historial,
-            "error": error
-        }
-    )
+        reclamo_id = obtener_id_desde_numero(numero)
+
+        if reclamo_id:
+            try:
+                reclamo = Reclamo.objects.select_related(
+                    "estado",
+                    "tipo_reclamo",
+                    "id_contribuyente"
+                ).get(
+                    id=reclamo_id,
+                    id_contribuyente__dni=dni
+                )
+
+                historial = reclamo.historial.all().order_by("fecha")
+
+            except Reclamo.DoesNotExist:
+                error = "No se encontró el reclamo con los datos ingresados"
+        else:
+            error = "Número de reclamo inválido"
+
+    return render(request, "reclamos/portal.html", {
+        "reclamo": reclamo,
+        "historial": historial,
+        "error": error
+    })
+
+def obtener_id_desde_numero(numero):
+        try:
+            return int(numero.split("-")[-1])
+        except:
+            return None

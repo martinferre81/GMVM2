@@ -1,13 +1,16 @@
+from django.views.generic import RedirectView
 from django.urls import path
 from . import views
+from django.shortcuts import render
+
+def dashboard(request):
+    # Mostramos la página principal del dashboard
+    return render(request, 'reclamos/dashboard.html')
 
 urlpatterns = [
-
-# SISTEMA DASHBOARD
-    path('', views.inicio, name='inicio'),
-    path('lista/', views.lista_reclamos, name='lista_reclamos'),
-
-    path('<int:id>/', views.obtener_reclamo, name='obtener_reclamo'),
+    path('', views.inicio, name='dashboard'),          # /dashboard/
+    path('<int:id>/', views.obtener_reclamo, name='reclamo'),  # /dashboard/8/
+    path('lista/', views.lista_reclamos, name='lista_reclamos'),    
     path('<int:id>/historial/', views.obtener_historial, name='obtener_historial'),
     path('anular/<int:id>/', views.eliminar_reclamo, name='eliminar_reclamo'),
 
@@ -15,7 +18,7 @@ urlpatterns = [
     path('foto/eliminar/<int:id>/', views.eliminar_foto),
 
 # PORTAL CIUDADANO
-    path('portal/', views.portal_reclamos, name='portal_reclamos'),
+    #path('portal/', views.portal_reclamos, name='portal_reclamos'),
     path('nuevo/', views.reclamo_wizard, name='reclamo_wizard'),
     path('consultar/', views.consultar_reclamo, name='consultar_reclamo'),
     path('buscar-contribuyente/', views.buscar_contribuyente, name='buscar_contribuyente'),

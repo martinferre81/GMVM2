@@ -306,7 +306,7 @@
   <div class="modal-dialog modal-md modal-dialog-centered">
     <div class="modal-content shadow-sm">
 
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST" id="formReclamo" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="reclamo_id" id="reclamo_id">
 
@@ -614,7 +614,7 @@ document.querySelectorAll(".editar-reclamo").forEach(icono => {
 
 function abrirEdicion(id){
 
-    fetch(`/reclamos/${id}/`)
+    fetch(`/dashboard/${id}/`)
     .then(response => response.json())
     .then(data => {
         console.log(data)
@@ -624,8 +624,9 @@ function abrirEdicion(id){
         document.getElementById("btnGuardar").innerText = "Actualizar"
         document.querySelector("[name='comentario_operador']").value = ""
         document.getElementById("reclamo_id").value = data.id
-        document.getElementById("id_id_contribuyente").value = data.id_contribuyente
-        document.getElementById("id_id_contribuyente").disabled = true
+        let select = $("#id_id_contribuyente")
+        select.val(data.id_contribuyente).trigger('change')
+        select.prop("disabled", true)
         document.getElementById("id_titulo").value = data.titulo
         document.getElementById("id_descripcion").value = data.descripcion
         document.getElementById("id_prioridad").value = data.prioridad
@@ -672,7 +673,7 @@ document.getElementById("btnConfirmarAnular").addEventListener("click", function
 
     if(reclamoSeleccionado){
         document.getElementById("reclamo_id").value = reclamoSeleccionado
-        fetch(`/reclamos/anular/${reclamoAEliminar}/`)
+        fetch(`/dashboard/anular/${reclamoAEliminar}/`)
         .then(response => response.json())
         .then(data => {
 
@@ -705,8 +706,8 @@ document.getElementById("btnConfirmarAnular").addEventListener("click", function
 
 
 function eliminarReclamo(id){
-    window.alert (id)
-    fetch(`/reclamos/anular/${id}/`)
+   
+    fetch(`/dashboard/anular/${id}/`)
     .then(response => response.json())
     .then(data => {
                 if(data.ret === 1){
@@ -738,7 +739,7 @@ document.querySelectorAll(".ver-historial").forEach(icono => {
     icono.addEventListener("click", function(){
         let id = this.dataset.id
 
-        fetch(`/reclamos/${id}/historial/`)
+        fetch(`/dashboard/${id}/historial/`)
         .then(response => response.json())
         .then(data => {
 
@@ -774,7 +775,7 @@ document.querySelectorAll(".ver-fotos").forEach(btn => {
 
 function verFotos(id){
 
-    fetch(`/reclamos/fotos/${id}/`)
+    fetch(`/dashboard/fotos/${id}/`)
     .then(response => response.json())
     .then(data => {
         let galeria = document.getElementById("galeriaFotos")
@@ -819,7 +820,7 @@ function zoomFoto(url){
 
 function eliminarFoto(id){
     if(!confirm("Eliminar esta foto?")) return
-    fetch(`/reclamos/foto/eliminar/${id}/`)
+    fetch(`/dashboard/foto/eliminar/${id}/`)
     .then(r => r.json())
     .then(data => {
         if(data.ret == 1){

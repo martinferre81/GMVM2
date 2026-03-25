@@ -309,6 +309,10 @@ $(document).ready(function() {
         allowClear: true
     });
 
+     $("#formReclamo").on("submit", function () {
+        $("#id_id_contribuyente").prop("disabled", false)
+    });
+
 });
 
 function toggleSidebarLeft() {

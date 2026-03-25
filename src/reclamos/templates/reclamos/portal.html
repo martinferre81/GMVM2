@@ -7,7 +7,7 @@
 <title>Sistema de Reclamos Ciudadanos</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 
 body{
@@ -101,7 +101,22 @@ body{
 
     <h1>Sistema de Reclamos Ciudadanos</h1>
     <div>Municipalidad de Valle María</div>
-
+    <a href="{% url 'login' %}" style="position: fixed; top: 15px; right: 20px; text-decoration: none; z-index: 1000;">
+    <div style="
+        background-color:white;
+        color:black;
+        padding:8px 12px;
+        border-radius:8px;
+        font-weight:bold;
+        font-family: 'Iceland', sans-serif;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: all 0.2s ease-in-out;"
+        onmouseover="this.style.backgroundColor='#85B5ED'"
+        onmouseout="this.style.backgroundColor='white'">
+        <i class="fa-solid fa-right-to-bracket"></i> GMVM
+    </div>
+</a>
+    
 </div>
 
 <!-- CONTENIDO -->
@@ -163,7 +178,7 @@ body{
         </div>
 
     {% endif %}
-    {% if reclamo %}
+    {% if reclamo and not error %}
 
         <div class="card card-portal mt-4">
 

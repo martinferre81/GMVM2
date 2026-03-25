@@ -1,0 +1,40 @@
+usr root
+pass: Bvxc0113_202-6
+Bvxc0113_202-6
+
+ssh -p5239 root@168.197.50.175
+cd ~/gmvm/src
+source /root/gmvm/venv/bin/activate
+python manage.py runserver 0.0.0.0:8000
+
+usuario django admin
+  usr_name: martin
+  pass:     2701
+
+scp datos.json root@168.197.50.175:/root/gmvm/src/
+
+
+pass: gva78RQ6638
+
+
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIC/45XJU6yK5pELpeFeLj5J+jv3E1jh4rmNE8rJXd9K vps-gmvm
+
+
+Postgres Producción server
+Crear usuario
+CREATE USER gmvm_usr WITH PASSWORD 'gmvm_2701';
+
+',
+
+gmvm_2701  
+
+------------------------GIT--------------------------------------------------
+*-Antes de trabajar
+git pull
+
+*-Después de trabajar
+git add .
+git commit -m "cambios"
+git push
+
+------------------------GIT--------------------------------------------------
