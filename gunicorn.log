@@ -1,0 +1,353 @@
+[2026-03-20 15:01:21 -0300] [2204315] [DEBUG] Current configuration:
+  config: ./gunicorn.conf.py
+  wsgi_app: None
+  bind: ['127.0.0.1:8087']
+  backlog: 2048
+  workers: 1
+  worker_class: sync
+  threads: 1
+  worker_connections: 1000
+  max_requests: 0
+  max_requests_jitter: 0
+  timeout: 30
+  graceful_timeout: 30
+  keepalive: 2
+  limit_request_line: 4094
+  limit_request_fields: 100
+  limit_request_field_size: 8190
+  reload: False
+  reload_engine: auto
+  reload_extra_files: []
+  spew: False
+  check_config: False
+  print_config: False
+  preload_app: False
+  sendfile: None
+  reuse_port: False
+  chdir: /home/gmvm/src
+  daemon: False
+  raw_env: []
+  pidfile: None
+  worker_tmp_dir: None
+  user: 0
+  group: 0
+  umask: 0
+  initgroups: False
+  tmp_upload_dir: None
+  secure_scheme_headers: {'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}
+  forwarded_allow_ips: ['127.0.0.1']
+  accesslog: /home/gmvm/src/gunicorn.log
+  disable_redirect_access_to_syslog: False
+  access_log_format: %(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
+  errorlog: /home/gmvm/src/gunicorn.log
+  loglevel: debug
+  capture_output: False
+  logger_class: gunicorn.glogging.Logger
+  logconfig: None
+  logconfig_dict: {}
+  logconfig_json: None
+  syslog_addr: udp://localhost:514
+  syslog: False
+  syslog_prefix: None
+  syslog_facility: user
+  enable_stdio_inheritance: False
+  statsd_host: None
+  dogstatsd_tags: 
+  statsd_prefix: 
+  proc_name: None
+  default_proc_name: proyecto.wsgi:application
+  pythonpath: None
+  paste: None
+  on_starting: <function OnStarting.on_starting at 0x7f7aa3d3f400>
+  on_reload: <function OnReload.on_reload at 0x7f7aa3d3f510>
+  when_ready: <function WhenReady.when_ready at 0x7f7aa3d3f620>
+  pre_fork: <function Prefork.pre_fork at 0x7f7aa3d3f730>
+  post_fork: <function Postfork.post_fork at 0x7f7aa3d3f840>
+  post_worker_init: <function PostWorkerInit.post_worker_init at 0x7f7aa3d3f950>
+  worker_int: <function WorkerInt.worker_int at 0x7f7aa3d3fa60>
+  worker_abort: <function WorkerAbort.worker_abort at 0x7f7aa3d3fb70>
+  pre_exec: <function PreExec.pre_exec at 0x7f7aa3d3fc80>
+  pre_request: <function PreRequest.pre_request at 0x7f7aa3d3fd90>
+  post_request: <function PostRequest.post_request at 0x7f7aa3d3fe18>
+  child_exit: <function ChildExit.child_exit at 0x7f7aa3d3ff28>
+  worker_exit: <function WorkerExit.worker_exit at 0x7f7aa3d5a0d0>
+  nworkers_changed: <function NumWorkersChanged.nworkers_changed at 0x7f7aa3d5a1e0>
+  on_exit: <function OnExit.on_exit at 0x7f7aa3d5a2f0>
+  ssl_context: <function NewSSLContext.ssl_context at 0x7f7aa3d5a400>
+  proxy_protocol: False
+  proxy_allow_ips: ['127.0.0.1']
+  keyfile: None
+  certfile: None
+  ssl_version: 2
+  cert_reqs: 0
+  ca_certs: None
+  suppress_ragged_eofs: True
+  do_handshake_on_connect: False
+  ciphers: None
+  raw_paste_global_conf: []
+  strip_header_spaces: False
+[2026-03-20 15:01:21 -0300] [2204315] [INFO] Starting gunicorn 21.2.0
+[2026-03-20 15:01:21 -0300] [2204315] [DEBUG] Arbiter booted
+[2026-03-20 15:01:21 -0300] [2204315] [INFO] Listening at: http://127.0.0.1:8087 (2204315)
+[2026-03-20 15:01:21 -0300] [2204315] [INFO] Using worker: sync
+[2026-03-20 15:01:21 -0300] [2204320] [INFO] Booting worker with pid: 2204320
+[2026-03-20 15:01:21 -0300] [2204315] [DEBUG] 1 workers
+[2026-03-20 15:01:46 -0300] [2204315] [INFO] Handling signal: int
+[2026-03-20 18:01:46 +0000] [2204320] [INFO] Worker exiting (pid: 2204320)
+[2026-03-20 15:01:46 -0300] [2204315] [INFO] Shutting down: Master
+[2026-03-20 15:02:20 -0300] [2204397] [DEBUG] Current configuration:
+  config: ./gunicorn.conf.py
+  wsgi_app: None
+  bind: ['127.0.0.1:8087']
+  backlog: 2048
+  workers: 1
+  worker_class: sync
+  threads: 1
+  worker_connections: 1000
+  max_requests: 0
+  max_requests_jitter: 0
+  timeout: 30
+  graceful_timeout: 30
+  keepalive: 2
+  limit_request_line: 4094
+  limit_request_fields: 100
+  limit_request_field_size: 8190
+  reload: False
+  reload_engine: auto
+  reload_extra_files: []
+  spew: False
+  check_config: False
+  print_config: False
+  preload_app: False
+  sendfile: None
+  reuse_port: False
+  chdir: /home/gmvm/src
+  daemon: False
+  raw_env: []
+  pidfile: None
+  worker_tmp_dir: None
+  user: 0
+  group: 0
+  umask: 0
+  initgroups: False
+  tmp_upload_dir: None
+  secure_scheme_headers: {'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}
+  forwarded_allow_ips: ['127.0.0.1']
+  accesslog: /home/gmvm/src/gunicorn.log
+  disable_redirect_access_to_syslog: False
+  access_log_format: %(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
+  errorlog: /home/gmvm/src/gunicorn.log
+  loglevel: debug
+  capture_output: False
+  logger_class: gunicorn.glogging.Logger
+  logconfig: None
+  logconfig_dict: {}
+  logconfig_json: None
+  syslog_addr: udp://localhost:514
+  syslog: False
+  syslog_prefix: None
+  syslog_facility: user
+  enable_stdio_inheritance: False
+  statsd_host: None
+  dogstatsd_tags: 
+  statsd_prefix: 
+  proc_name: None
+  default_proc_name: proyecto.wsgi:application
+  pythonpath: None
+  paste: None
+  on_starting: <function OnStarting.on_starting at 0x7fe4dba10400>
+  on_reload: <function OnReload.on_reload at 0x7fe4dba10510>
+  when_ready: <function WhenReady.when_ready at 0x7fe4dba10620>
+  pre_fork: <function Prefork.pre_fork at 0x7fe4dba10730>
+  post_fork: <function Postfork.post_fork at 0x7fe4dba10840>
+  post_worker_init: <function PostWorkerInit.post_worker_init at 0x7fe4dba10950>
+  worker_int: <function WorkerInt.worker_int at 0x7fe4dba10a60>
+  worker_abort: <function WorkerAbort.worker_abort at 0x7fe4dba10b70>
+  pre_exec: <function PreExec.pre_exec at 0x7fe4dba10c80>
+  pre_request: <function PreRequest.pre_request at 0x7fe4dba10d90>
+  post_request: <function PostRequest.post_request at 0x7fe4dba10e18>
+  child_exit: <function ChildExit.child_exit at 0x7fe4dba10f28>
+  worker_exit: <function WorkerExit.worker_exit at 0x7fe4dba2b0d0>
+  nworkers_changed: <function NumWorkersChanged.nworkers_changed at 0x7fe4dba2b1e0>
+  on_exit: <function OnExit.on_exit at 0x7fe4dba2b2f0>
+  ssl_context: <function NewSSLContext.ssl_context at 0x7fe4dba2b400>
+  proxy_protocol: False
+  proxy_allow_ips: ['127.0.0.1']
+  keyfile: None
+  certfile: None
+  ssl_version: 2
+  cert_reqs: 0
+  ca_certs: None
+  suppress_ragged_eofs: True
+  do_handshake_on_connect: False
+  ciphers: None
+  raw_paste_global_conf: []
+  strip_header_spaces: False
+[2026-03-20 15:02:20 -0300] [2204397] [INFO] Starting gunicorn 21.2.0
+[2026-03-20 15:02:20 -0300] [2204397] [DEBUG] Arbiter booted
+[2026-03-20 15:02:20 -0300] [2204397] [INFO] Listening at: http://127.0.0.1:8087 (2204397)
+[2026-03-20 15:02:20 -0300] [2204397] [INFO] Using worker: sync
+[2026-03-20 15:02:20 -0300] [2204400] [INFO] Booting worker with pid: 2204400
+[2026-03-20 15:02:20 -0300] [2204397] [DEBUG] 1 workers
+[2026-03-20 18:03:29 +0000] [2204400] [DEBUG] GET /favicon.ico
+127.0.0.1 - - [20/Mar/2026:18:03:29 +0000] "GET /favicon.ico HTTP/1.0" 404 5669 "https://reclamos.municipalidadvallemaria.com/reclamos/8/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0"
+[2026-03-20 18:03:32 +0000] [2204400] [DEBUG] GET /dashboard/
+127.0.0.1 - - [20/Mar/2026:18:03:33 +0000] "GET /dashboard/ HTTP/1.0" 200 53726 "https://reclamos.municipalidadvallemaria.com/login/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0"
+[2026-03-20 15:03:50 -0300] [2204397] [INFO] Handling signal: int
+[2026-03-20 18:03:50 +0000] [2204400] [INFO] Worker exiting (pid: 2204400)
+[2026-03-20 15:03:50 -0300] [2204397] [INFO] Shutting down: Master
+[2026-03-20 15:16:19 -0300] [2205984] [DEBUG] Current configuration:
+  config: ./gunicorn.conf.py
+  wsgi_app: None
+  bind: ['127.0.0.1:8087']
+  backlog: 2048
+  workers: 1
+  worker_class: sync
+  threads: 1
+  worker_connections: 1000
+  max_requests: 0
+  max_requests_jitter: 0
+  timeout: 30
+  graceful_timeout: 30
+  keepalive: 2
+  limit_request_line: 4094
+  limit_request_fields: 100
+  limit_request_field_size: 8190
+  reload: False
+  reload_engine: auto
+  reload_extra_files: []
+  spew: False
+  check_config: False
+  print_config: False
+  preload_app: False
+  sendfile: None
+  reuse_port: False
+  chdir: /home/gmvm/src
+  daemon: False
+  raw_env: []
+  pidfile: None
+  worker_tmp_dir: None
+  user: 0
+  group: 0
+  umask: 0
+  initgroups: False
+  tmp_upload_dir: None
+  secure_scheme_headers: {'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}
+  forwarded_allow_ips: ['127.0.0.1']
+  accesslog: /home/gmvm/src/gunicorn.log
+  disable_redirect_access_to_syslog: False
+  access_log_format: %(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
+  errorlog: /home/gmvm/src/gunicorn.log
+  loglevel: debug
+  capture_output: False
+  logger_class: gunicorn.glogging.Logger
+  logconfig: None
+  logconfig_dict: {}
+  logconfig_json: None
+  syslog_addr: udp://localhost:514
+  syslog: False
+  syslog_prefix: None
+  syslog_facility: user
+  enable_stdio_inheritance: False
+  statsd_host: None
+  dogstatsd_tags: 
+  statsd_prefix: 
+  proc_name: None
+  default_proc_name: proyecto.wsgi:application
+  pythonpath: None
+  paste: None
+  on_starting: <function OnStarting.on_starting at 0x7f007c2b6400>
+  on_reload: <function OnReload.on_reload at 0x7f007c2b6510>
+  when_ready: <function WhenReady.when_ready at 0x7f007c2b6620>
+  pre_fork: <function Prefork.pre_fork at 0x7f007c2b6730>
+  post_fork: <function Postfork.post_fork at 0x7f007c2b6840>
+  post_worker_init: <function PostWorkerInit.post_worker_init at 0x7f007c2b6950>
+  worker_int: <function WorkerInt.worker_int at 0x7f007c2b6a60>
+  worker_abort: <function WorkerAbort.worker_abort at 0x7f007c2b6b70>
+  pre_exec: <function PreExec.pre_exec at 0x7f007c2b6c80>
+  pre_request: <function PreRequest.pre_request at 0x7f007c2b6d90>
+  post_request: <function PostRequest.post_request at 0x7f007c2b6e18>
+  child_exit: <function ChildExit.child_exit at 0x7f007c2b6f28>
+  worker_exit: <function WorkerExit.worker_exit at 0x7f007c2d10d0>
+  nworkers_changed: <function NumWorkersChanged.nworkers_changed at 0x7f007c2d11e0>
+  on_exit: <function OnExit.on_exit at 0x7f007c2d12f0>
+  ssl_context: <function NewSSLContext.ssl_context at 0x7f007c2d1400>
+  proxy_protocol: False
+  proxy_allow_ips: ['127.0.0.1']
+  keyfile: None
+  certfile: None
+  ssl_version: 2
+  cert_reqs: 0
+  ca_certs: None
+  suppress_ragged_eofs: True
+  do_handshake_on_connect: False
+  ciphers: None
+  raw_paste_global_conf: []
+  strip_header_spaces: False
+[2026-03-20 15:16:19 -0300] [2205984] [INFO] Starting gunicorn 21.2.0
+[2026-03-20 15:16:19 -0300] [2205984] [DEBUG] Arbiter booted
+[2026-03-20 15:16:19 -0300] [2205984] [INFO] Listening at: http://127.0.0.1:8087 (2205984)
+[2026-03-20 15:16:19 -0300] [2205984] [INFO] Using worker: sync
+[2026-03-20 15:16:19 -0300] [2205987] [INFO] Booting worker with pid: 2205987
+[2026-03-20 15:16:19 -0300] [2205984] [DEBUG] 1 workers
+[2026-03-20 18:16:19 +0000] [2205987] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/arbiter.py", line 609, in spawn_worker
+    worker.init_process()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/workers/base.py", line 134, in init_process
+    self.load_wsgi()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/workers/base.py", line 146, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 58, in load
+    return self.load_wsgiapp()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 48, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/gunicorn/util.py", line 371, in import_app
+    mod = importlib.import_module(module)
+  File "/usr/lib64/python3.6/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 994, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 971, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 955, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/gmvm/src/proyecto/wsgi.py", line 16, in <module>
+    application = get_wsgi_application()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+    django.setup(set_prefix=False)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/apps/registry.py", line 122, in populate
+    app_config.ready()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/contrib/admin/apps.py", line 27, in ready
+    self.module.autodiscover()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/contrib/admin/__init__.py", line 24, in autodiscover
+    autodiscover_modules('admin', register_to=site)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/utils/module_loading.py", line 47, in autodiscover_modules
+    import_module('%s.%s' % (app_config.name, module_to_search))
+  File "/usr/lib64/python3.6/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 994, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 971, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 955, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/contrib/auth/admin.py", line 6, in <module>
+    from django.contrib.auth.forms import (
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/contrib/auth/forms.py", line 11, in <module>
+    from django.contrib.auth.tokens import default_token_generator
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/contrib/auth/tokens.py", line 117, in <module>
+    default_token_generator = PasswordResetTokenGenerator()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/contrib/auth/tokens.py", line 18, in __init__
+    self.secret = self.secret or settings.SECRET_KEY
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/conf/__init__.py", line 90, in __getattr__
+    raise ImproperlyConfigured("The SECRET_KEY setting must not be empty.")
+django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty.
+[2026-03-20 18:16:19 +0000] [2205987] [INFO] Worker exiting (pid: 2205987)
+[2026-03-20 15:16:19 -0300] [2205984] [ERROR] Worker (pid:2205987) exited with code 3
+[2026-03-20 15:16:19 -0300] [2205984] [ERROR] Shutting down: Master
+[2026-03-20 15:16:19 -0300] [2205984] [ERROR] Reason: Worker failed to boot.

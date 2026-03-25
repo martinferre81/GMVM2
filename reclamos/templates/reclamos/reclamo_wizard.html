@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Nuevo Reclamo</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+    .step{
+        display:none;
+    }
+
+    .step.active{
+        display:block;
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h3 class="text-center mb-4">
+        Nuevo Reclamo
+    </h3>
+
+<!-- barra progreso -->
+
+<div class="progress mb-4">
+
+<div id="barraProgreso" class="progress-bar" style="width:20%">
+Paso 1 de 5
+</div>
+
+</div>
+
+<form id="formReclamo" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!-- PASO 1 -->
+    <div class="step active">
+        <h5>Datos personales</h5>
+
+        <div class="mb-3">
+            <label>DNI</label>
+            <input type="text" class="form-control" name="dni" id="dni" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Apellido</label>
+            <input type="text" class="form-control" name="apellido" id="apellido" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Nombres</label>
+            <input type="text" class="form-control" name="nombres" id="nombres" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Teléfono</label>
+            <input type="text" class="form-control" name="telefono" id="telefono">
+        </div>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" class="form-control" name="email" id="email">
+        </div>
+
+    </div>
+
+    <!-- PASO 2 -->
+
+    <div class="step">
+        <h5>Tipo de reclamo</h5>
+
+        <select class="form-control" name="tipo">
+            <option value="">Seleccione</option>
+                {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}">
+                    {{ tipo.nombre }}
+                    </option>
+                {% endfor %}
+
+        </select>
+    </div>
+
+    <!-- PASO 3 -->
+
+    <div class="step">
+        <h5>Detalle del reclamo</h5>
+        <div class="mb-3">
+            <label>Título</label>
+            <input type="text" class="form-control" name="titulo">
+        </div>
+        <div class="mb-3">
+            <label>Dirección</label>
+            <input type="text" class="form-control" name="direccion" placeholder="Ej: San Martín 2359">
+        </div>
+        <div class="mb-3">
+            <label>Descripción</label>
+            <textarea class="form-control" name="descripcion"></textarea>
+        </div>
+    </div>
+
+    <!-- PASO 4 -->
+
+    <div class="step">
+        <h5>Fotos</h5>
+        <input type="file" class="form-control" name="fotos" id="fotos" multiple>
+        <div id="previewFotos" class="row mt-3"></div>
+    </div>
+
+    <!-- PASO 5 -->
+
+    <div class="step text-center">
+        <h4>Confirmar envío</h4>
+        <p>
+        Revise los datos antes de enviar el reclamo.
+        </p>
+
+        <button id="btnEnviar" type="submit" class="btn btn-success">
+            Enviar Reclamo
+        </button>
+    </div>
+
+</form>
+
+<!-- botones -->
+
+    <div class="mt-4 d-flex justify-content-between">
+
+        <button id="btnAnterior" class="btn btn-secondary" onclick="anterior()"> Anterior </button>
+        <button id="btnSiguiente" class="btn btn-primary" onclick="siguiente()"> Siguiente  </button>
+    </div>
+</div>
+
+<script>
+
+let paso=0
+let steps=document.querySelectorAll(".step")
+
+function mostrarPaso(){
+    steps.forEach(s=>s.classList.remove("active"))
+    steps[paso].classList.add("active")
+
+    let porcentaje=((paso+1)/steps.length)*100
+
+    document.getElementById("barraProgreso").style.width=porcentaje+"%"
+    document.getElementById("barraProgreso").innerText="Paso "+(paso+1)+" de "+steps.length
+
+    let btnSiguiente = document.getElementById("btnSiguiente")
+    let btnAnterior = document.getElementById("btnAnterior")
+    let btnEnviar = document.getElementById("btnEnviar")
+
+    // PRIMER PASO
+    if(paso === 0){
+        btnAnterior.style.display = "none"
+    } else {
+        btnAnterior.style.display = "inline-block"
+    }
+
+    // ÚLTIMO PASO
+    if(paso === steps.length - 1){
+        btnSiguiente.style.display = "none"
+        btnEnviar.style.display = "inline-block"
+    } else {
+        btnSiguiente.style.display = "inline-block"
+        btnEnviar.style.display = "none"
+    }
+}
+
+function siguiente(){
+
+if(paso<steps.length-1){
+    paso++
+    mostrarPaso()
+    }
+}
+
+function anterior(){
+
+if(paso>0){
+    paso--
+    mostrarPaso()
+    }
+}
+
+document.getElementById("dni").addEventListener("blur", function(){
+
+    let dni = this.value
+    if(dni.length < 7){
+        return
+    }
+    fetch("/dashboard/buscar-contribuyente/?dni="+dni)
+    .then(response => response.json())
+    .then(data => {
+        if(data.existe){
+            document.getElementById("apellido").value = data.apellido
+            document.getElementById("nombres").value = data.nombres
+            document.getElementById("telefono").value = data.telefono
+            document.getElementById("email").value = data.email
+        }
+    })
+})
+
+document.getElementById("fotos").addEventListener("change", function(){
+
+    let preview = document.getElementById("previewFotos")
+    preview.innerHTML=""
+    let files = this.files
+    for(let i=0;i<files.length;i++){
+        let reader = new FileReader()
+        reader.onload = function(e){
+            let col = document.createElement("div")
+            col.className="col-md-3 mb-3"
+
+            col.innerHTML=` <img src="${e.target.result}" class="img-fluid rounded shadow"> `
+            preview.appendChild(col)
+        }
+        reader.readAsDataURL(files[i])
+    }
+})
+
+</script>
+
+</body>
+</html>
