@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}Gestor Municipalidad de Valle Maria{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        body { background-color: #f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar {
+            min-height: 100vh;
+            background-color: #1f2933;
+            color: white;
+            width: 16.666%;
+            transition: transform 0.3s ease, width 0.3s ease;
+        }
+
+        .sidebar a { color: #cfd8dc; text-decoration: none; }
+        .sidebar a:hover { color: #ffffff; }
+        .sidebar-title { font-weight: bold; font-size: 1.2rem; }
+
+        /* SIDEBAR OCULTO */
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+            width: 0;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+
+        /* CONTENIDO */
+        .content {
+            padding: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .content-expanded {
+            width: calc(100% - 16.666%);
+        }
+
+        footer { background-color: #1f2933; color: #cfd8dc; }
+        footer a { color: #cfd8dc; }
+
+        /* SUBMENU CONFIGURACIÓN */
+        #config-menu {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .config-collapsed {
+            max-height: 0;
+        }
+
+        .config-expanded {
+            max-height: 300px; /* suficiente para los ítems */
+        }
+
+        #config-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .arrow-rotated {
+            transform: rotate(180deg);
+        }
+
+         .badge-custom {   /* estilo para el badge de la tabla de reclamos */
+            display: inline-block;
+            width: 80px;
+            text-align: center;
+         }
+
+        .fila-seleccionada td{
+            color:#FFFFFF;
+            background-color:#656C7D !important;
+        }
+         .tabla-historial td{
+            font-size: 13px;
+            padding: 4px 6px;
+            line-height: 1.2;
+        }
+
+        .tabla-historial th{
+            font-size: 13px;
+            padding: 5px;
+        }
+
+        .tabla-historial{
+            width: auto;
+            table-layout: auto;
+        }
+
+        .tabla-historial thead th{
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .tabla-historial th, .tabla-historial td
+        {
+            white-space: nowrap;
+        }
+
+        .tabla-historial td:nth-child(5),
+        .tabla-historial th:nth-child(5){
+            max-width: 300px;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .modal-historial{
+            max-width: fit-content;
+        }
+        .modal-historial-body{
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .fila-reclamo td {
+            padding: 0.25rem 0.5rem; /* menos padding vertical y horizontal */
+            font-size: 0.85rem;      /* fuente más pequeña */
+            line-height: 1.1;        /* ajusta la altura de línea */
+        }
+        .alerta-demora {
+            animation: parpadeo 1.5s infinite;
+        }
+
+        @keyframes parpadeo {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .card-dashboard {
+            min-height: 90px;
+        }
+        .tabla-reclamos-container{
+            height:40vh;
+            overflow-y:auto;
+            border:1px solid #dee2e6;
+        }
+
+        /* deja el header fijo */
+        .tabla-reclamos-container thead th{
+            position:sticky;
+            top:0;
+            background:#212529;
+            color:white;
+            z-index:2;
+        }
+        .card canvas{
+            height:260px !important;
+        }
+
+        .panel-lateral{
+            background:#000;
+            color:white;
+        }
+
+        .panel-lateral .card-header{
+            background:#000;
+            color:white;
+            border-bottom:1px solid #444;
+        }
+
+        .panel-lateral label{
+            color:white;
+        }
+
+        .panel-lateral .form-control,
+        .panel-lateral .form-select{
+            background:#f8f9fa;
+        }
+
+        .panel-lateral .btn{
+            background:white;
+            color:#0d6efd;
+            border:none;
+            font-weight:500;
+        }
+
+        .panel-lateral .btn:hover{
+            background:#e9ecef;
+        }
+        .modal-content {
+            border-radius: 12px;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.85rem;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+        .select2-container--open {
+            z-index: 9999 !important;
+        }
+
+        @media (max-width: 768px) {
+
+            #tablaReclamos {
+                font-size: 12px;
+                min-width: 600px;
+            }
+
+            #tablaReclamos th,
+            #tablaReclamos td {
+                white-space: nowrap;
+            }
+
+            .card-dashboard {
+                display: none; /* ocultar cards en mobile */
+            }
+
+            .panel-lateral {
+                position: static !important;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            #main-content {
+                padding: 10px;
+            }
+
+            .card-header {
+                font-size: 14px;
+            }
+
+            .btn-sm {
+                font-size: 13px;
+            }
+
+            aside:last-of-type {
+                display: none !important;
+            }
+
+            #main-content {
+                padding: 10px;
+            }
+
+            .filtros-mobile {
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 8px;
+                display: block !important;
+            }
+            #sidebar-derecho {
+                display: none !important;
+            }
+        }
+        @media (min-width: 768px) {
+            .filtros-mobile {
+                display: none !important;
+            }
+       }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <!-- BOTÓN MENU -->
+    <button class="btn btn-outline-light btn-sm me-3" onclick="toggleSidebarLeft()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <span class="navbar-text text-white me-4">
+        <i class="fa-solid fa-user"></i> Usuario: <strong>{{ user.username|capfirst }}</strong>
+    </span>
+
+    <span class="navbar-text text-white me-auto">
+        <i class="fa-solid fa-calendar-days"></i> {{ fecha_actual }}
+    </span>
+
+    <form method="post" action="{% url 'logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </button>
+    </form>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        {% if not es_sector %}
+        <!-- MENU IZQUIERDO -->
+        <aside id="sidebar-derecho" class="col-12 col-md-3 col-lg-2 bg-light p-3 border-start d-none d-md-block">
+            <div class="sidebar-title mb-4">GMVM</div>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-clipboard-list"></i> Reclamos</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-users"></i> Vecinos</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-bell"></i> Notificaciones</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-chart-line"></i> Reportes</a></li>
+                <li class="nav-item mt-3">
+                    <a href="javascript:void(0);" class="d-flex justify-content-between align-items-center"
+                       onclick="toggleConfigMenu()">
+                        <strong>Configuración</strong>
+                        <i id="config-arrow" class="fa-solid fa-chevron-down"></i>
+                    </a>
+                </li>
+
+                <ul id="config-menu" class="nav flex-column ms-3 config-collapsed">
+                    <li class="nav-item"><a href="#">Usuarios</a></li>
+                    <li class="nav-item"><a href="#">Permisos</a></li>
+                    <li class="nav-item"><a href="#">Parámetros</a></li>
+                </ul>
+            </ul>
+        </aside>
+        {% endif %}
+
+        <!-- CONTENIDO CENTRAL -->
+        <main id="main-content" class="col-12 col-md-9 col-lg-10 content">
+             <!-- MOBILE: filtros + acciones -->
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <!-- MENU DERECHO -->
+        <aside class="col-12 col-md-3 col-lg-2 bg-light p-3 border-start d-none d-md-block">
+            {% block sidebar_right %}
+            {% endblock %}
+        </aside>
+
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="text-center py-3 mt-4">
+    <div>
+        Desarrollado por <strong>MEF Sistemas</strong> © 2026
+    </div>
+    <div>
+        <a href="#"><i class="fa-brands fa-facebook"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-twitter"></i></a>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+$(document).ready(function() {
+
+    // SELECTS DE LA MODAL
+    $('.select2-modal').select2({
+        dropdownParent: $('#modalReclamo'),
+        width: '100%',
+        placeholder: "Buscar contribuyente...",
+        allowClear: true
+    });
+
+    // SELECTS DEL SIDEBAR (FILTROS)
+    $('.select2-sidebar').select2({
+        dropdownParent: $(document.body),
+        width: '100%',
+        placeholder: "Buscar...",
+        allowClear: true
+    });
+
+     $("#formReclamo").on("submit", function () {
+        $("#id_id_contribuyente").prop("disabled", false)
+    });
+
+     ajustarColumnas();
+
+});
+
+
+function ajustarColumnas() {
+    if (window.innerWidth < 768) {
+        tabla.column(0).visible(false); // ID
+        tabla.column(1).visible(false); // Usuario
+        tabla.column(3).visible(false); // Fecha cierre
+    } else {
+        tabla.column(0).visible(true);
+        tabla.column(1).visible(true);
+        tabla.column(3).visible(true);
+    }
+}
+
+
+// ejecutar al redimensionar
+window.addEventListener('resize', ajustarColumnas);
+
+function toggleSidebarLeft() {
+    const sidebar = document.getElementById('sidebar-left');
+    sidebar.classList.toggle('sidebar-collapsed');
+}
+    function toggleConfigMenu() {
+    const menu = document.getElementById('config-menu');
+    const arrow = document.getElementById('config-arrow');
+
+    if (menu.classList.contains('config-collapsed')) {
+        menu.classList.remove('config-collapsed');
+        menu.classList.add('config-expanded');
+        arrow.classList.add('arrow-rotated');
+    } else {
+        menu.classList.add('config-collapsed');
+        menu.classList.remove('config-expanded');
+        arrow.classList.remove('arrow-rotated');
+    }
+}
+
+const labels = {{ labels_tipos|safe }};
+const data = {{ data_tipos|safe }};
+
+const ctx = document.getElementById('graficoTipos');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Cantidad de reclamos',
+            data: data,
+            backgroundColor: [
+                '#0d6efd',
+                '#ffc107',
+                '#198754',
+                '#dc3545',
+                '#6f42c1',
+                '#20c997'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// GRAFICO RECLAMOS POR MES
+new Chart(
+    document.getElementById('graficoMes'),
+    {
+        type: 'line',
+        data: {
+            labels: {{ labels_meses|safe }},
+            datasets: [{
+                label: 'Reclamos',
+                data: {{ data_meses|safe }},
+                borderColor: '#0d6efd',
+                fill: false,
+                tension: 0.2
+            }]
+        }
+    }
+);
+
+
+// GRAFICO RECLAMOS POR ESTADO
+new Chart(
+    document.getElementById('graficoEstado'),
+    {
+        type: 'doughnut',
+        data: {
+            labels: {{ labels_estado|safe }},
+            datasets: [{
+                data: {{ data_estado|safe }},
+                backgroundColor: [
+                    '#0d6efd',
+                    '#ffc107',
+                    '#198754',
+                    '#dc3545',
+                    '#6c757d'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    }
+);
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

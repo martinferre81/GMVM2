@@ -1,0 +1,238 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ingreso - GMVM</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Iceland&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+
+body{
+    background: linear-gradient(135deg,#0E2AA1,#4ca1af);
+    height:100vh;
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family: Arial, sans-serif;
+    padding:15px;
+}
+
+/* CARD */
+.login-card{
+    width:100%;
+    max-width:380px;
+    border-radius:14px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border:1px solid rgba(255,255,255,0.4);
+    overflow:hidden; /* 🔥 evita desbordes */
+}
+
+/* LOGO */
+.logo-login{
+    width:80px;
+    margin-bottom:10px;
+    animation: flotar 4s ease-in-out infinite;
+}
+
+@keyframes flotar{
+    0%{transform:translateY(0px)}
+    50%{transform:translateY(-6px)}
+    100%{transform:translateY(0px)}
+}
+
+/* LABELS */
+.col-form-label{
+    margin-bottom:0;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+/* INPUTS */
+.form-control{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box; /* 🔥 clave */
+}
+
+/* INPUT GROUP FIX DEFINITIVO */
+.input-group{
+    width:100%;
+    display:flex;
+    flex-wrap:nowrap;
+}
+
+.input-group .form-control{
+    flex:1 1 auto;
+    min-width:0; /* 🔥 el fix más importante */
+}
+
+.input-group-text{
+    height:38px;
+    cursor:pointer;
+    white-space:nowrap;
+}
+
+/* COLUMNAS (evita overflow raro) */
+.row > [class*="col"]{
+    min-width:0; /* 🔥 mejor que overflow hidden */
+}
+
+/* MOBILE */
+@media (max-width: 576px){
+
+    .login-card{
+        border-radius:12px;
+    }
+
+    .card-body{
+        padding:20px 15px;
+    }
+
+    h3{
+        font-size:22px;
+    }
+
+    .logo-login{
+        width:65px;
+    }
+
+    .form-label,
+    .col-form-label{
+        font-size:14px;
+    }
+
+    .btn{
+        padding:10px;
+        font-size:16px;
+    }
+
+    .row > [class*="col"]{
+        padding-left:5px;
+        padding-right:5px;
+    }
+
+     .form-row {
+        display: block;
+    }
+
+    .form-row label {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .form-row > div {
+        width: 100%;
+    }
+}
+.form-control{
+    width:100%;
+}
+
+/* INPUT GROUP CORRECTO */
+.input-group{
+    width:100%;
+}
+
+.input-group .form-control{
+    flex:1 1 auto;
+    min-width:0;
+}
+
+.input-group-text{
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 0 12px;
+}
+
+/* DESKTOP GRANDE */
+@media (min-width: 1200px){
+    .login-card{
+        max-width:420px;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+<div class="card shadow-lg login-card">
+
+    <div class="card-body p-4">
+
+        <div class="text-center mb-4">
+            <!--i class="fa-solid fa-city login-icon"></i-->
+            <img src="{% static 'img/logo_valle_maria_1.png' %}" class="logo-login">
+
+           <div class="text-center mb-3">
+                <h3 class="fw-bold mb-1" style="color:#00388A">GMVM</h3>
+                <div class="text-secondary small">
+                    Sistema de Gestión
+                </div>
+                <div class="text-muted small">
+                    Municipalidad de Valle María
+                </div>
+
+            </div>
+        </div>
+
+       <form method="post">
+            {% csrf_token %}
+
+            <!-- USUARIO -->
+            <div class="mb-3 row align-items-center form-row">
+                <label class="col-sm-4 col-form-label">Usuario</label>
+                <div class="col-sm-8">
+                    {{ form.username }}
+                </div>
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="mb-4 row align-items-center form-row">
+                <label class="col-sm-4 col-form-label">Contraseña</label>
+                <div class="col-sm-8">
+                    <div class="input-group">
+                        {{ form.password }}
+                        <span class="input-group-text" id="togglePassword">
+                            <i class="fa-solid fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    Ingresar
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+const togglePassword = document.querySelector("#togglePassword");
+const password = document.querySelector("#id_password");
+
+togglePassword.addEventListener("click", function () {
+    const type = password.getAttribute("type") === "password" ? "text" : "password";
+    password.setAttribute("type", type);
+    this.querySelector("i").classList.toggle("fa-eye-slash");
+});
+</script>
+
+</body>
+</html>

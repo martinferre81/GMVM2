@@ -1,0 +1,56 @@
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "/usr/lib64/python3.6/threading.py", line 937, in _bootstrap_inner
+    self.run()
+  File "/usr/lib64/python3.6/threading.py", line 885, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/utils/autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/core/management/commands/runserver.py", line 118, in inner_run
+    self.check(display_num_errors=True)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/core/management/base.py", line 423, in check
+    databases=databases,
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/core/checks/registry.py", line 76, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/core/checks/urls.py", line 13, in check_url_config
+    return check_resolver(resolver)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/core/checks/urls.py", line 23, in check_resolver
+    return check_method()
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/urls/resolvers.py", line 412, in check
+    for pattern in self.url_patterns:
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/utils/functional.py", line 48, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/urls/resolvers.py", line 598, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/utils/functional.py", line 48, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/urls/resolvers.py", line 591, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "/usr/lib64/python3.6/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 994, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 971, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 955, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/gmvm/src/proyecto/urls.py", line 35, in <module>
+    path('dashboard/', include('reclamos.urls')),
+  File "/home/gmvm/venv/lib64/python3.6/site-packages/django/urls/conf.py", line 34, in include
+    urlconf_module = import_module(urlconf_module)
+  File "/usr/lib64/python3.6/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 994, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 971, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 955, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/gmvm/src/reclamos/urls.py", line 6, in <module>
+    path('', views.dashboard, name='dashboard'),          # /dashboard/
+AttributeError: module 'reclamos.views' has no attribute 'dashboard'
+
+Performing system checks...
+

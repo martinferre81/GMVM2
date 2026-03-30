@@ -1,0 +1,362 @@
+[
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "ADMINISTRADOR",
+      "permissions": [
+        1,
+        2,
+        3,
+        4,
+        9,
+        10,
+        11,
+        12,
+        5,
+        6,
+        7,
+        8,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        25,
+        26,
+        27,
+        28,
+        33,
+        34,
+        35,
+        36,
+        29,
+        30,
+        31,
+        32,
+        21,
+        22,
+        23,
+        24
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+      "name": "LUZ",
+      "permissions": [
+        1,
+        33,
+        34,
+        36
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 3,
+    "fields": {
+      "name": "PODA",
+      "permissions": [
+        1,
+        33,
+        34,
+        36,
+        21,
+        22
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 4,
+    "fields": {
+      "name": "CLOACA",
+      "permissions": [
+        1,
+        33,
+        34,
+        36,
+        21
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 5,
+    "fields": {
+      "name": "CAMINOS",
+      "permissions": [
+        1,
+        33,
+        34,
+        36,
+        21
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 6,
+    "fields": {
+      "name": "RESIDUOS",
+      "permissions": [
+        1,
+        33,
+        34,
+        36,
+        21
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 7,
+    "fields": {
+      "name": "RECOLECCION_RESIDUOS",
+      "permissions": [
+        1,
+        33,
+        34,
+        36,
+        21
+      ]
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$GDlmNvcfuypnhgZ3lJVONP$BvBTCwm3oWfe0Jf/R2vvFJkdwQ702090V5Gc8BfiKeY=",
+      "last_login": "2026-03-07T17:30:43.604Z",
+      "is_superuser": true,
+      "username": "martin",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-03-04T12:20:42Z",
+      "groups": [
+        1
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$S60h2QixQi8ZoAW3xT1z2b$GDmXZnIa3NJioQpbCzFDyc7VtwUCVcBoHDfgErTspWI=",
+      "last_login": "2026-03-05T19:11:06.550Z",
+      "is_superuser": false,
+      "username": "poda_usuario1",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-03-05T12:08:23Z",
+      "groups": [
+        3
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$VuB9b7SmoTgeMWz0f7BhVk$zrh2V6koLCWSdZ1xgxYL07/MiNmzPlK3ZWRerbwbCdo=",
+      "last_login": "2026-03-05T12:47:40.308Z",
+      "is_superuser": false,
+      "username": "luz_usuario1",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-03-05T12:47:12Z",
+      "groups": [
+        2
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$cWl604dTTr55WbAPl8E2Ff$Qru76bMFMpfl5khvzQVrYqbuJlpUwgJlhDq/smWKNQg=",
+      "last_login": "2026-03-05T12:53:44.594Z",
+      "is_superuser": false,
+      "username": "poda2",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-03-05T12:51:19Z",
+      "groups": [
+        3
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$7tTzFY5bTiSundTWVMfKaG$p5qj19/Y0GohYm8QBNyApos0UdxP2q82J5QhqQ/qhOE=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "contribuyente",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-03-05T12:56:14Z",
+      "groups": [],
+      "user_permissions": [
+        1,
+        8,
+        20,
+        28,
+        36,
+        24
+      ]
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 1,
+    "fields": {
+      "nombre": "GENERAL",
+      "descripcion": "Reclamo del tipo general. El administrador asigna luego el area",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 2,
+    "fields": {
+      "nombre": "PODA",
+      "descripcion": "Poda de arboles y arbustos",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 3,
+    "fields": {
+      "nombre": "LUZ",
+      "descripcion": "Energia espacios publicos y tendido electrico",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 4,
+    "fields": {
+      "nombre": "CLOACA",
+      "descripcion": "Obstrucciones y red de cloacas",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 5,
+    "fields": {
+      "nombre": "CAMINOS",
+      "descripcion": "Caminos y pavimento",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 6,
+    "fields": {
+      "nombre": "RESIDUOS",
+      "descripcion": "Acopio de residuos",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.tiporeclamo",
+    "pk": 7,
+    "fields": {
+      "nombre": "RECOLECCION_RESIDUOS",
+      "descripcion": "Recoleccion de residuos",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 1,
+    "fields": {
+      "nombre": "INGRESO",
+      "descripcion": "Ingreso del reclamo al sistema",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 2,
+    "fields": {
+      "nombre": "EN_PROCESO",
+      "descripcion": "Reclamo en proceso de analisis",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 3,
+    "fields": {
+      "nombre": "EN_REVISION",
+      "descripcion": "Area analizando el reclamo para validar",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 4,
+    "fields": {
+      "nombre": "VALIDADO",
+      "descripcion": "Reclamo atendido y en proceso de solucion",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 5,
+    "fields": {
+      "nombre": "FINALIZADO",
+      "descripcion": "Finalizado",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 6,
+    "fields": {
+      "nombre": "CANCELADO",
+      "descripcion": "Reclamo cancelado",
+      "activo": true
+    }
+  },
+  {
+    "model": "reclamos.estadoreclamo",
+    "pk": 7,
+    "fields": {
+      "nombre": "ANULADO",
+      "descripcion": "Reclamo no valido",
+      "activo": true
+    }
+  }
+]

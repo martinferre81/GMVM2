@@ -1,0 +1,662 @@
+{% extends 'reclamos/base.html' %}
+
+{% block title %}Reclamos - GMVM{% endblock %}
+
+{% block content %}
+{% if not es_sector %}
+<div class="row mb-3 text-center align-items-stretch" xmlns:else="http://www.w3.org/1999/xhtml" xmlns:else="http://www.w3.org/1999/xhtml">
+        <div class="col-md-2">
+            <div class="card text-bg-primary shadow-sm h-100 card-dashboard">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-calendar fa-lg"></i>
+                    <div>Ingresados este mes</div>
+                    <h3>{{ reclamos_mes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card text-bg-warning shadow-sm h-100 card-dashboard">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-gear fa-lg"></i>
+                    <div>En proceso</div>
+                    <h3>{{ reclamos_en_proceso }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card text-bg-success shadow-sm h-100 card-dashboard">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-check fa-lg"></i>
+                    <div>Finalizados</div>
+                    <h3>{{ reclamos_finalizados }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card text-bg-dark shadow-sm h-100 card-dashboard">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-ban fa-lg"></i>
+                    <div>Anulados</div>
+                    <h3>{{ reclamos_anulados }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+        <div class="card text-bg-info shadow-sm h-100 card-dashboard">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-clock fa-lg"></i>
+                <div>Tiempo promedio</div>
+                <h3>{{ tiempo_promedio }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2" style="cursor:pointer" onclick="window.location.href='?demorados=1'">
+        <div class="card shadow-sm h-100 card-dashboard {% if reclamos_demorados > 0 %}bg-danger text-white alerta-demora{% else %}text-bg-dark{% endif %}">
+            <div class="card-body py-2 text-center">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                 <div class="small">Demorados</div>
+                <h5>{{ reclamos_demorados }}</h5>
+           </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<div class="tabla-reclamos-container">
+    <table id="tablaReclamos" class="table table-bordered table-striped table-hover align-middle">
+        <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Fecha Creación</th>
+                    <th>Fecha Cierre</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Vecino</th>
+                    <th> </th>
+
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for reclamo in reclamos %}
+
+            <tr class="fila-reclamo {% if reclamo.esta_demorado %}table-danger{% endif %}" data-id="{{ reclamo.id }}" {% if reclamo.esta_demorado %}
+                title="Este reclamo está demorado hace {{ reclamo.dias_demora }} días" {% endif %}>
+
+                <td>{{ reclamo.id }}</td>
+                <td>{{ reclamo.usuario|capfirst }}</td>
+                <td>{{ reclamo.fecha_creacion }}</td>
+                <td>{{ reclamo.fecha_cierre|default:"—" }}</td>
+                <td>{{ reclamo.tipo_reclamo }}</td>
+
+                <td>
+                      {% if reclamo.get_prioridad_display == "Alta" %}
+                        <span class="badge bg-danger badge-custom">{{ reclamo.get_prioridad_display }}</span>
+                      {% elif reclamo.get_prioridad_display == "Media" %}
+                        <span class="badge bg-warning badge-custom">{{ reclamo.get_prioridad_display }}</span>
+                      {% else %}
+                        <span class="badge bg-success badge-custom">{{ reclamo.get_prioridad_display }}</span>
+                      {% endif %}
+                </td>
+
+                <td>{{ reclamo.titulo }}</td>
+
+                <td>
+                      {% if reclamo.estado.nombre == "INGRESO" %}
+                        <span class="badge bg-info badge-custom">{{ reclamo.estado }}</span>
+                      {% elif reclamo.estado.nombre == "EN_PROCESO" %}
+                        <span class="badge bg-warning badge-custom">{{ reclamo.estado }}</span>
+                      {% elif reclamo.estado.nombre == "EN_REVISION" %}
+                        <span class="badge bg-warning badge-custom">{{ reclamo.estado }}</span>
+                      {% elif reclamo.estado.nombre == "VALIDADO" %}
+                        <span class="badge bg-warning badge-custom">{{ reclamo.estado }}</span>
+                      {% elif reclamo.estado.nombre == "CANCELADO" %}
+                        <span class="badge bg-warning badge-custom">{{ reclamo.estado }}</span>
+                      {% elif reclamo.estado.nombre == "ANULADO" %}
+                        <span class="badge bg-warning badge-custom">{{ reclamo.estado }}</span>
+                      {% elif reclamo.estado.nombre == "FINALIZADO" %}
+                        <span class="badge bg-success badge-custom">{{ reclamo.estado }}</span>
+                      {% else %}
+                        <span class="badge bg-info badge-custom">{{ reclamo.estado }}</span>
+                      {% endif %}
+                </td>
+
+                <td>{{ reclamo.id_contribuyente }}</td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <i class="fa-solid fa-pen text-primary editar-reclamo"
+                           style="cursor:pointer"
+                           data-id="{{ reclamo.id }}">
+                        </i>
+                        <i class="fa-solid fa-clock-rotate-left text-secondary ver-historial"
+                           style="cursor:pointer"
+                           data-id="{{ reclamo.id }}">
+                        </i>
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-camera text-secondary ver-fotos me-1"
+                               style="cursor:pointer"
+                               data-id="{{ reclamo.id }}">
+                            </i>
+                            <span>
+                                {{ reclamo.total_fotos }}
+                            </span>
+
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+    </table>
+</div>
+
+{% if not es_sector %}
+<!--------------------------------- Graficos estadisticos ----------------------------------->
+<div class="row mt-4">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                Reclamos por tipo
+            </div>
+            <div class="card-body">
+                <canvas id="graficoTipos"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                Reclamos por mes
+            </div>
+            <div class="card-body">
+                <canvas id="graficoMes"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                Reclamos por estado
+            </div>
+            <div class="card-body">
+                <canvas id="graficoEstado"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!---------------------------------Fin Graficos estadisticos ----------------------------------->
+{% endif %}
+{% endblock %}
+
+{% block sidebar_right %}
+
+<!-- FRAME FILTROS -->
+<div class="card shadow-sm panel-lateral">
+    <div class="card-header fw-bold">
+        <i class="fa-solid fa-filter"></i> Filtros
+    </div>
+
+    <div class="card-body">
+        <form method="get">
+
+            <div class="mb-2">
+                <label class="form-label">Buscar</label>
+                <input type="text" id="busquedaGeneral" class="form-control form-control-sm"
+                       placeholder="ID, vecino, título, usuario...">
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Fecha creación</label>
+                <input type="date" class="form-control form-control-sm"
+                       name="fecha_desde" value="{{ fecha_desde }}">
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Fecha hasta</label>
+                <input type="date" class="form-control form-control-sm"
+                       name="fecha_hasta" value="{{ fecha_hasta}}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Tipo reclamo</label>
+                <select class="form-select form-select-sm" name="tipo">
+                   <option value="">Todos</option>
+                        {% for t in tipos %}
+                        <option value="{{t.id}}" {% if request.GET.tipo == t.id|stringformat:"s" %}selected{% endif %}>
+                        {{t.nombre}}
+                        </option>
+                        {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    {% for e in estados %}
+                       {% with eid=e.id|stringformat:"s" %}
+                            <option value="{{ e.id }}"
+                            {% if request.GET.estado == eid %}selected{% endif %}>
+                                {{ e.nombre }}
+                            </option>
+                            {% endwith %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Vecino</label>
+                <select name="vecino" class="form-select form-select-sm select2-sidebar">
+                    <option value="">Todos</option>
+                    {% for v in vecinos %}
+                    <option value="{{v.id}}"
+                        {% if request.GET.vecino == v.id|stringformat:"s" %}selected{% endif %}>
+                        {{v}}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button class="btn btn-primary btn-sm w-100">
+                <i class="fa-solid fa-magnifying-glass"></i> Aplicar filtros
+            </button>
+
+        </form>
+    </div>
+</div>
+<!--FIN  FRAME FILTROS -->
+<!-- FRAME ACCIONES -->
+<div class="card mb-3 shadow-sm panel-lateral">
+    <div class="card-header fw-bold">
+        <i class="fa-solid fa-gears"></i> Acciones
+    </div>
+    <div class="card-body d-grid gap-2">
+
+        <button class="btn btn-success btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#modalReclamo">
+            <i class="fa-solid fa-plus"></i> Nuevo Reclamo
+        </button>
+
+        <button class="btn btn-warning btn-sm" id="btnEditar" disabled>
+            <i class="fa-solid fa-pen"></i> Editar
+        </button>
+
+        <button class="btn btn-danger btn-sm" id="btnEliminar" disabled>
+            <i class="fa-solid fa-trash"></i> Eliminar
+        </button>
+
+    </div>
+</div>
+
+
+
+
+
+<script>
+let reclamoAEliminar = null;
+
+var tabla = $('#tablaReclamos').DataTable({
+    language: {
+        emptyTable: "No se encontraron reclamos",
+        zeroRecords: "No se encontraron coincidencias con los filtros"
+    },
+    columnDefs: [
+        {
+            targets: [0,1,3],
+            visible: !(window.innerWidth < 768 && {{ es_sector|yesno:"true,false" }})
+        }
+    ],
+    deferRender: false,
+    autoWidth: false,
+    pageLength: 35,
+    dom: 'rt',
+    paging: false,
+    info: false,
+    lengthChange: false
+});
+window.tabla = tabla;
+
+$('#busquedaGeneral').on('keyup', function () {
+    tabla.search(this.value).draw();
+});
+
+let reclamoSeleccionado = null
+
+$(document).on("click", ".fila-reclamo", function () {
+
+    $(".fila-reclamo").removeClass("fila-seleccionada");
+
+    $(this).addClass("fila-seleccionada");
+
+    reclamoSeleccionado = $(this).data("id");
+
+    $("#btnEditar").prop("disabled", false);
+    $("#btnEliminar").prop("disabled", false);
+});
+
+$(document).on("dblclick", ".fila-reclamo", function () {
+
+    let id = $(this).data("id");
+
+    $("#reclamo_id").val(id);
+
+    abrirEdicion(id);
+});
+
+$(document).on("click", ".editar-reclamo", function () {
+
+    let id = $(this).data("id");
+
+    $("#reclamo_id").val(id);
+    $("[name='comentario_operador']").val("");
+
+    abrirEdicion(id);
+});
+
+function abrirEdicion(id){
+
+    fetch(`/dashboard/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+        console.log(data)
+        document.getElementById("modalTitulo").innerHTML =
+            '<i class="fa-solid fa-pen"></i> Editar Reclamo #' + data.id
+
+        document.getElementById("btnGuardar").innerText = "Actualizar"
+        document.querySelector("[name='comentario_operador']").value = ""
+        document.getElementById("reclamo_id").value = data.id
+        let select = $("#id_id_contribuyente")
+        select.val(data.id_contribuyente).trigger('change')
+        select.prop("disabled", true)
+        document.getElementById("id_titulo").value = data.titulo
+        document.getElementById("id_descripcion").value = data.descripcion
+        document.getElementById("id_prioridad").value = data.prioridad
+        document.getElementById("id_estado").value = data.estado
+        document.getElementById("id_tipo_reclamo").value = data.tipo_reclamo
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReclamo')).show();
+
+    })
+
+}
+
+const btnNuevo = document.querySelector('[data-bs-target="#modalReclamo"]');
+
+if (btnNuevo) {
+    btnNuevo.addEventListener("click", function(){
+        document.getElementById("modalTitulo").innerHTML =
+        '<i class="fa-solid fa-plus"></i> Nuevo Reclamo'
+        document.querySelector("#modalReclamo form").reset()
+        document.getElementById("btnGuardar").innerText = "Crear Reclamo"
+        document.getElementById("id_id_contribuyente").readOnly = false
+        document.getElementById("reclamo_id").value = ""
+        });
+}
+
+
+const btnEditar = document.getElementById("btnEditar");
+if (btnEditar) {
+    btnEditar.addEventListener("click", function(){
+        if(reclamoSeleccionado){
+            document.getElementById("reclamo_id").value = reclamoSeleccionado
+            document.querySelector("[name='comentario_operador']").value = ""
+            abrirEdicion(reclamoSeleccionado)
+        }
+    });
+}
+
+const btnEliminar = document.getElementById("btnEliminar");
+if (btnEliminar) {
+    btnEliminar.addEventListener("click", function(){
+        reclamoAEliminar = reclamoSeleccionado;
+
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById('modalConfirmarAnular')
+        ).show();
+    });
+}
+
+
+function eliminarReclamo(id){
+   
+    fetch(`/dashboard/anular/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+                if(data.ret === 1){
+
+                            // buscar la fila del reclamo
+                            let fila = document.querySelector(`tr[data-id="${id}"]`);
+
+                            if(fila){
+
+                                // buscar columna de estado (columna 8)
+                                let celdaEstado = fila.children[7];
+
+                                celdaEstado.innerHTML =
+                                    '<span class="badge bg-dark badge-custom">ANULADO</span>';
+
+                                // quitar color rojo si estaba demorado
+                                fila.classList.remove("table-danger");
+
+                            }
+
+                        }else{
+                            alert("Error al anular el reclamo");
+                        }
+    })
+}
+
+const btnConfirmar = document.getElementById("btnConfirmarAnular");
+
+if (btnConfirmar) {
+    btnConfirmar.addEventListener("click", function(){
+
+        if(reclamoSeleccionado){
+            document.getElementById("reclamo_id").value = reclamoSeleccionado
+            fetch(`/dashboard/anular/${reclamoAEliminar}/`)
+            .then(response => response.json())
+            .then(data => {
+
+                if(data.ret === 1){
+
+                    let fila = document.querySelector(`tr[data-id="${reclamoAEliminar}"]`);
+
+                    if(fila){
+                        let celdaEstado = fila.children[7];
+
+                        celdaEstado.innerHTML =
+                            '<span class="badge bg-dark badge-custom">ANULADO</span>';
+
+                        fila.classList.remove("table-danger");
+                    }
+
+                }else{
+                    alert("Error al anular el reclamo");
+                }
+
+                bootstrap.Modal.getInstance(
+                    document.getElementById('modalConfirmarAnular')
+                ).hide();
+
+            });
+        }
+    });
+}
+
+$(document).on("click", ".ver-historial", function () {
+
+    let id = $(this).data("id");
+
+    fetch(`/dashboard/${id}/historial/`)
+    .then(response => response.json())
+    .then(data => {
+
+        // DESKTOP
+        let tabla = $("#tabla_historial");
+        tabla.html("");
+
+        // MOBILE
+        let mobile = document.querySelector("#modalHistorialMobile #historialMobile");
+        if (mobile) mobile.innerHTML = "";
+
+        data.forEach(h => {
+
+            tabla.append(`
+                <tr>
+                    <td>${h.fecha}</td>
+                    <td>${h.usuario.toUpperCase()}</td>
+                    <td>${h.accion}</td>
+                    <td>${h.cambios}</td>
+                    <td>${h.comentario}</td>
+                </tr>
+            `);
+
+            if (mobile) {
+                mobile.innerHTML += `
+                    <div class="card mb-2 shadow-sm historial-card">
+                        <div class="card-body p-2">
+
+                            <div class="d-flex justify-content-between">
+                                <strong>${h.usuario.toUpperCase()}</strong>
+                                <small class="text-muted">${h.fecha}</small>
+                            </div>
+
+                            <div class="mt-1">
+                                <span class="badge bg-primary">${h.accion}</span>
+                            </div>
+
+                            ${h.cambios ? `
+                                <div class="mt-2 small">
+                                    <b>Cambios:</b><br>
+                                    ${h.cambios}
+                                </div>
+                            ` : ""}
+
+                            ${h.comentario ? `
+                                <div class="mt-2 small text-muted">
+                                    ${h.comentario}
+                                </div>
+                            ` : ""}
+                        </div>
+                    </div>
+                `;
+            }
+
+        });
+
+        // MOSTRAR MODAL
+        let esMobile = window.innerWidth < 768;
+        if (esMobile) {
+            bootstrap.Modal.getOrCreateInstance(
+                document.getElementById('modalHistorialMobile')
+            ).show();
+        } else {
+            bootstrap.Modal.getOrCreateInstance(
+                document.getElementById('modalHistorial')
+            ).show();
+        }
+
+    })
+    .catch(err => console.error("Error historial:", err));
+
+});
+
+$(document).on("click", ".ver-fotos", function () {
+
+    let id = $(this).data("id");
+    verFotos(id);
+});
+
+function verFotos(id){
+
+    fetch(`/dashboard/fotos/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+        let galeria = document.getElementById("galeriaFotos")
+        galeria.innerHTML = ""
+        if (data.length == 0) {
+                galeria.innerHTML = `<div class="text-center"><h5>No se encontraron imagenes para este reclamo</h5></div>`
+        }
+
+        data.forEach(f => {
+            console.log(f)
+            let col = document.createElement("div")
+            col.className = "col-md-3 mb-3"
+            galeria.innerHTML += `
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card shadow-sm">
+                                            <img src="${f.url}"
+                                                 class="card-img-top"
+                                                 style="height:150px; object-fit:cover; cursor:pointer"
+                                                 onclick="zoomFoto('${f.url}')">
+                                            <div class="card-body text-center p-2">
+                                                <a href="${f.url}" download class="btn btn-sm btn-success">
+                                                    <i class="fa-solid fa-download"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-danger"
+                                                        onclick="eliminarFoto(${f.id})">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `
+
+        })
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFotos')).show();
+
+    })
+}
+
+function zoomFoto(url){
+    document.getElementById("imagenZoom").src = url
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalZoom')).show();
+}
+
+function eliminarFoto(id){
+    if(!confirm("Eliminar esta foto?")) return
+    fetch(`/dashboard/foto/eliminar/${id}/`)
+    .then(r => r.json())
+    .then(data => {
+        if(data.ret == 1){
+            mostrarToast("Se ha eliminado la imagen.")
+            setTimeout(() => {
+                location.reload()
+            }, 2800)
+
+        }
+    })
+}
+
+function mostrarToast(mensaje){
+
+    let toastEl = document.getElementById('toastMensaje')
+    let toastTexto = document.getElementById('toastTexto')
+    toastTexto.innerText = mensaje
+    let toast = new bootstrap.Toast(toastEl, {
+        delay: 2800
+    })
+    toast.show()
+}
+
+</script>
+
+{% endblock %}
+
+
+
+

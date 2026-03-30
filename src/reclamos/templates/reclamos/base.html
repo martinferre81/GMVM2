@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Gestor Municipalidad de Valle Maria{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        body { background-color: #f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            z-index: 1040;
+            width: 250px;
+            transform: translateX(-100%);
+            min-height: 100vh;
+            background-color: #1f2933;
+            color: white;
+            width: 16.666%;
+            transition: transform 0.3s ease, width 0.3s ease;
+        }
+
+        .sidebar a { color: #cfd8dc; text-decoration: none; }
+        .sidebar a:hover { color: #ffffff; }
+        .sidebar-title { font-weight: bold; font-size: 1.2rem; }
+
+        /* SIDEBAR OCULTO */
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+        }
+
+        /* CONTENIDO */
+        .content {
+            padding: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .content-expanded {
+            width: calc(100% - 16.666%);
+        }
+
+        footer { background-color: #1f2933; color: #cfd8dc; }
+        footer a { color: #cfd8dc; }
+
+        /* SUBMENU CONFIGURACIÓN */
+        #config-menu {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .config-collapsed {
+            max-height: 0;
+        }
+
+        .config-expanded {
+            max-height: 300px; /* suficiente para los ítems */
+        }
+
+        #config-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .arrow-rotated {
+            transform: rotate(180deg);
+        }
+
+         .badge-custom {   /* estilo para el badge de la tabla de reclamos */
+            display: inline-block;
+            width: 80px;
+            text-align: center;
+         }
+
+        .fila-seleccionada td{
+            color:#FFFFFF;
+            background-color:#656C7D !important;
+        }
+         .tabla-historial td{
+            font-size: 13px;
+            padding: 4px 6px;
+            line-height: 1.2;
+        }
+
+        .tabla-historial th{
+            font-size: 13px;
+            padding: 5px;
+        }
+
+        .tabla-historial{
+            width: auto;
+            table-layout: auto;
+        }
+
+        .tabla-historial thead th{
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .tabla-historial th, .tabla-historial td
+        {
+            white-space: nowrap;
+        }
+
+        .tabla-historial td:nth-child(5),
+        .tabla-historial th:nth-child(5){
+            max-width: 300px;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .modal-historial{
+            max-width: 95%;
+            margin: auto;
+        }
+        .modal-historial-body{
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .fila-reclamo td {
+            padding: 0.25rem 0.5rem; /* menos padding vertical y horizontal */
+            font-size: 0.85rem;      /* fuente más pequeña */
+            line-height: 1.1;        /* ajusta la altura de línea */
+        }
+        .alerta-demora {
+            animation: parpadeo 1.5s infinite;
+        }
+
+        @keyframes parpadeo {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .card-dashboard {
+            min-height: 90px;
+        }
+        .tabla-reclamos-container{
+            height:40vh;
+            overflow-y:auto;
+            border:1px solid #dee2e6;
+        }
+
+        /* deja el header fijo */
+        .tabla-reclamos-container thead th{
+            position:sticky;
+            top:0;
+            background:#212529;
+            color:white;
+            z-index:2;
+        }
+        .card canvas{
+            height:260px !important;
+        }
+
+        .panel-lateral{
+            background:#000;
+            color:white;
+        }
+
+        .panel-lateral .card-header{
+            background:#000;
+            color:white;
+            border-bottom:1px solid #444;
+        }
+
+        .panel-lateral label{
+            color:white;
+        }
+
+        .panel-lateral .form-control,
+        .panel-lateral .form-select{
+            background:#f8f9fa;
+        }
+
+        .panel-lateral .btn{
+            background:white;
+            color:#0d6efd;
+            border:none;
+            font-weight:500;
+        }
+
+        .panel-lateral .btn:hover{
+            background:#e9ecef;
+        }
+        .modal-content {
+            border-radius: 12px;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.85rem;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+        .select2-container--open {
+            z-index: 9999 !important;
+        }
+
+         /* 👇 MOBILE */
+        @media (max-width: 768px) {
+
+             #sidebar-right {
+                display: none !important;
+            }
+
+            #sidebar-left {
+                display: none !important;
+            }
+
+            #main-content {
+                padding: 10px;
+                width: 100% !important;
+            }
+
+            .filtros-mobile {
+                display: block !important;
+            }
+
+             .modal-dialog {
+                  margin: 15px;
+                  max-width: calc(100% - 30px);
+                  height: auto;
+            }
+
+            .modal-content {
+                border-radius: 12px;
+                max-height: 90vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .modal-body {
+                overflow-y: auto;
+                max-height: calc(90vh - 120px);
+            }
+
+            .modal-header,
+            .modal-footer {
+                padding: 10px !important;
+            }
+
+            .modal-backdrop {
+                z-index: 1050 !important;
+            }
+            .modal-historial {
+                max-width: 100%;
+                margin: 10px;
+            }
+
+            .tabla-historial {
+                font-size: 11px;
+            }
+
+            .tabla-historial th,
+            .tabla-historial td {
+                padding: 4px;
+            }
+        }
+        .tabla-historial thead th {
+            position: sticky;
+            top: 0;
+            background: #212529;
+            color: white;
+            z-index: 2;
+        }
+
+        .tabla-historial {
+            width: 100%;
+            table-layout: auto;
+            font-size: 12px;
+        }
+
+        .tabla-historial th,
+        .tabla-historial td {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        /* columnas largas */
+        .tabla-historial td:nth-child(4),
+        .tabla-historial td:nth-child(5) {
+            white-space: normal;
+            word-break: break-word;
+            max-width: 200px;
+        }
+
+        /* desktop */
+        @media (min-width: 768px) {
+            .filtros-mobile {
+                display: none !important;
+            }
+            .modal-historial {
+                max-width: 900px;
+            }
+        }
+
+        .modal-historial-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        /* BOTON FLOTANTE */
+        .btn-filtros {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9999;
+
+            animation: reboteSuave 2s infinite;
+        }
+
+        /* BADGE */
+        .badge-filtros {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 50%;
+        }
+
+        /* ANIMACION */
+        @keyframes reboteSuave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* hover */
+        .btn-filtros:hover {
+            background: #0b5ed7;
+            transform: scale(1.1);
+            animation: none;
+        }
+        .offcanvas-custom {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .historial-card {
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        .historial-card .badge {
+            font-size: 11px;
+        }
+        .badge-filtros {
+            display: none !important;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <!-- BOTÓN MENU -->
+    <button class="btn btn-outline-light btn-sm me-3" onclick="toggleSidebarLeft()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <span class="navbar-text text-white me-4">
+        <i class="fa-solid fa-user"></i> Usuario: <strong>{{ user.username|capfirst }}</strong>
+    </span>
+
+    <span class="navbar-text text-white me-auto">
+        <i class="fa-solid fa-calendar-days"></i> {{ fecha_actual }}
+    </span>
+
+    <form method="post" action="{% url 'logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </button>
+    </form>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- MENU IZQUIERDO -->
+        <aside id="sidebar-left" class="sidebar p-3">
+            <div class="sidebar-title mb-4">GMVM</div>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-clipboard-list"></i> Reclamos</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-users"></i> Vecinos</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-bell"></i> Notificaciones</a></li>
+                <li class="nav-item mb-2"><a href="#"><i class="fa-solid fa-chart-line"></i> Reportes</a></li>
+                <li class="nav-item mt-3">
+                    <a href="javascript:void(0);" class="d-flex justify-content-between align-items-center"
+                       onclick="toggleConfigMenu()">
+                        <strong>Configuración</strong>
+                        <i id="config-arrow" class="fa-solid fa-chevron-down"></i>
+                    </a>
+                </li>
+
+                <ul id="config-menu" class="nav flex-column ms-3 config-collapsed">
+                    <li class="nav-item"><a href="#">Usuarios</a></li>
+                    <li class="nav-item"><a href="#">Permisos</a></li>
+                    <li class="nav-item"><a href="#">Parámetros</a></li>
+                </ul>
+            </ul>
+        </aside>
+
+        <!-- CONTENIDO CENTRAL -->
+        <main id="main-content" class="col content">
+                {% block content %}
+                {% endblock %}
+        </main>
+
+        <!-- MENU DERECHO -->
+       <aside id="sidebar-right" class="col-md-2 bg-light p-3 border-start d-none d-md-block">
+            {% block sidebar_right %}{% endblock %}
+        </aside>
+
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="text-center py-3 mt-4">
+    <div>
+        Desarrollado por <strong>MEF Sistemas</strong> © 2026
+    </div>
+    <div>
+        <a href="#"><i class="fa-brands fa-facebook"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="ms-2"><i class="fa-brands fa-twitter"></i></a>
+    </div>
+</footer>
+<!-- FOOTER -->
+
+<div class="offcanvas offcanvas-end offcanvas-custom d-md-none"
+     tabindex="-1"
+     id="offcanvasFiltros">
+
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">
+            <i class="fa-solid fa-filter"></i> Filtros
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+
+    <div class="offcanvas-body">
+        {% include 'reclamos/sidebar_right_content.html' %}
+    </div>
+</div>
+
+
+<!--Boton filtros mobile -->
+<div class="btn-filtros d-md-none"
+     data-bs-toggle="offcanvas"
+     data-bs-target="#offcanvasFiltros">
+
+    <i class="fa-solid fa-filter"></i>
+
+    <span id="badgeFiltros" class="badge-filtros">0</span>
+</div>
+<!-- Boton filtros mobile -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+$(document).ready(function() {
+
+    // SELECT2 MODAL
+    $('#modalReclamo').on('shown.bs.modal', function () {
+        $('.select2-modal').select2({
+            dropdownParent: $('#modalReclamo'),
+            width: '100%',
+            placeholder: "Buscar contribuyente...",
+            allowClear: true
+        });
+    });
+
+    // SELECT2 SIDEBAR
+    $('.select2-sidebar').select2({
+        width: '100%',
+        placeholder: "Buscar...",
+        allowClear: true
+    });
+
+    $("#formReclamo").on("submit", function () {
+        $("#id_id_contribuyente").prop("disabled", false)
+    });
+
+});
+
+
+function toggleSidebarLeft() {
+    const sidebar = document.getElementById('sidebar-left');
+    if (sidebar) sidebar.classList.toggle('sidebar-collapsed');
+}
+
+function toggleConfigMenu() {
+    const menu = document.getElementById('config-menu');
+    const arrow = document.getElementById('config-arrow');
+
+    if (!menu || !arrow) return;
+
+    menu.classList.toggle('config-collapsed');
+    menu.classList.toggle('config-expanded');
+    arrow.classList.toggle('arrow-rotated');
+}
+
+
+window.addEventListener('resize', ajustarColumnas);
+
+function ajustarColumnas() {
+
+    if (!window.tabla) return;
+
+    let esMobile = window.innerWidth < 768;
+    let esSector = {{ es_sector|yesno:"true,false" }};
+
+    if (esMobile && esSector) {
+        window.tabla.column(0).visible(false);
+        window.tabla.column(1).visible(false);
+        window.tabla.column(3).visible(false);
+    } else {
+        window.tabla.column(0).visible(true);
+        window.tabla.column(1).visible(true);
+        window.tabla.column(3).visible(true);
+    }
+}
+
+// CONTAR FILTROS
+function contarFiltrosActivos() {
+    let count = 0;
+
+    document.querySelectorAll(
+        '#offcanvasFiltros input, #offcanvasFiltros select, #sidebar-right input, #sidebar-right select'
+    ).forEach(el => {
+
+        // ignorar búsqueda general
+        if (el.id === "busquedaGeneral") return;
+
+        // ignorar vacíos
+        if (!el.value || el.value.trim() === "") return;
+
+        count++;
+    });
+
+    const badge = document.getElementById("badgeFiltros");
+    if (badge) badge.innerText = count;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+const offcanvas = document.getElementById('offcanvasFiltros');
+
+    if (offcanvas) {
+        offcanvas.addEventListener('show.bs.offcanvas', function () {
+            const btn = document.querySelector('.btn-filtros');
+            if (btn) btn.style.animation = 'none';
+        });
+    }
+    contarFiltrosActivos();
+
+});
+
+document.addEventListener("change", function(e) {
+    if (
+        e.target.closest('#offcanvasFiltros') ||
+        e.target.closest('#sidebar-right')
+    ) {
+        contarFiltrosActivos();
+    }
+});
+
+
+{% if not es_sector %}
+const labels = {{ labels_tipos|safe }};
+const data = {{ data_tipos|safe }};
+
+const ctx = document.getElementById('graficoTipos');
+
+if (ctx) {
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels_tipos|safe }},
+            datasets: [{
+                label: 'Cantidad de reclamos',
+                data: {{ data_tipos|safe }},
+                backgroundColor: [
+                    '#0d6efd',
+                    '#ffc107',
+                    '#198754',
+                    '#dc3545',
+                    '#6f42c1',
+                    '#20c997'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// GRAFICO RECLAMOS POR MES
+const graficoMes = document.getElementById('graficoMes');
+
+if (graficoMes) {
+    new Chart(graficoMes, {
+        type: 'line',
+        data: {
+            labels: {{ labels_meses|safe }},
+            datasets: [{
+                label: 'Reclamos',
+                data: {{ data_meses|safe }},
+                borderColor: '#0d6efd',
+                fill: false,
+                tension: 0.2
+            }]
+        }
+    });
+}
+
+
+// GRAFICO RECLAMOS POR ESTADO
+const graficoEstado = document.getElementById('graficoEstado');
+if (graficoEstado) {
+    new Chart(graficoEstado, {
+        type: 'doughnut',
+        data: {
+            labels: {{ labels_estado|safe }},
+            datasets: [{
+                data: {{ data_estado|safe }},
+                backgroundColor: [
+                    '#0d6efd',
+                    '#ffc107',
+                    '#198754',
+                    '#dc3545',
+                    '#6c757d'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+}
+{% endif %}
+</script>
+{% block modals %}
+
+
+<!-- MODAL NUEVO RECLAMO -->
+<div class="modal fade" id="modalReclamo" tabindex="-1">
+  <div class="modal-dialog modal-fullscreen-md-down modal-dialog-centered">
+    <div class="modal-content shadow-sm">
+
+      <form method="POST" id="formReclamo" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="reclamo_id" id="reclamo_id">
+
+        <!-- HEADER -->
+        <div class="modal-header py-2 px-3">
+          <h6 class="modal-title mb-0" id="modalTitulo">
+            <i class="fa-solid fa-plus me-1 text-primary"></i>
+            Nuevo Reclamo
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <!-- ERRORES -->
+        {% if form.errors %}
+        <div class="alert alert-danger m-2 py-2 small">
+          {{ form.errors }}
+        </div>
+        {% endif %}
+
+        <!-- BODY -->
+        <div class="modal-body px-3 py-2 small">
+
+          <!-- BLOQUE PRINCIPAL -->
+          <div class="row g-2">
+
+            <!-- 👤 CONTRIBUYENTE -->
+            <div class="col-12">
+              <label class="form-label mb-1 fw-semibold">Contribuyente</label>
+              {{ form.id_contribuyente }}
+            </div>
+
+            <!-- 📝 TITULO -->
+            <div class="col-12">
+              <label class="form-label mb-1">Título</label>
+              {{ form.titulo }}
+            </div>
+
+            <!-- 🧾 DESCRIPCION -->
+            <div class="col-12">
+              <label class="form-label mb-1">Descripción</label>
+              {{ form.descripcion }}
+            </div>
+
+          </div>
+
+          <!-- ⚙️ BLOQUE SEPARADO -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <div class="border rounded p-2 bg-light-subtle">
+
+                <div class="row g-2">
+
+                  <div class="col-12 col-md-4 d-flex flex-column">
+                    <label class="form-label mb-1">Tipo</label>
+                    {{ form.tipo_reclamo }}
+                  </div>
+
+                  <div class="col-12 col-md-4 d-flex flex-column">
+                    <label class="form-label mb-1">Estado</label>
+                    {{ form.estado }}
+                  </div>
+
+                  <div class="col-12 col-md-4 d-flex flex-column">
+                      <label class="form-label mb-1">Prioridad</label>
+                      {{ form.prioridad }}
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- 📷 FOTOS -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <label class="form-label mb-1">Fotos</label>
+              <input type="file"
+                     name="fotos"
+                     class="form-control form-control-sm"
+                     multiple
+                     accept="image/*">
+            </div>
+          </div>
+
+          <!-- 🧑‍💻 OBSERVACION -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <label class="form-label mb-1">Observación operador</label>
+              <textarea name="comentario_operador"
+                        class="form-control form-control-sm"
+                        rows="3"
+                        placeholder="Detalle del cambio..."></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer py-2 px-3">
+          <button type="submit" class="btn btn-sm btn-success" id="btnGuardar"> <i class="fa-solid fa-check me-1"></i> Guardar </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal"> Cancelar </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+<!-- MODAL HISTORIAL DE UN RECLAMO -->
+<div class="modal fade" id="modalHistorial" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-historial">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial del Reclamo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body modal-historial-body">
+
+        <table class="table table-sm table-bordered tabla-historial">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Usuario</th>
+                    <th>Acción</th>
+                    <th>Cambios</th>
+                    <th>Comentario</th>
+                </tr>
+            </thead>
+
+            <tbody id="tabla_historial">
+
+            </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- FIN MODAL HISTORIAL DE UN RECLAMO -->
+<!-- Modal historial Mobile---->
+<div class="modal fade" id="modalHistorialMobile">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Historial
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-2" style="overflow-y:auto;">
+                <div id="historialMobile"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal historial Mobile---->
+
+<!-- MODAL CONFIRMACION ELIMINAR RECLAMO -->
+<div class="modal fade" id="modalConfirmarAnular" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Confirmar anulación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                 El reclamo seleccionado esta por cambiar de estado.
+                ¿Está seguro que desea <b>anular este reclamo</b>?
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-danger" id="btnConfirmarAnular">
+                    <i class="fa-solid fa-trash"></i>
+                    Anular reclamo
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!------------- FIN MODAL ELIMINAR RECLAMO ----------------------------->
+
+<!-----------------------MODAL GALERIA DE IMAGENES---------------------->
+<div class="modal fade" id="modalFotos">
+    <div class="modal-dialog modal-fullscreen-md-down modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-camera"></i> Fotos del reclamo
+                </h5>
+
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row" id="galeriaFotos"></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-----------------------FIN MODAL GALERIA DE IMAGENES---------------------->
+<!-----------------------MODAL ZOON PARA IMAGENES--------------------------->
+<div class="modal fade" id="modalZoom">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-body text-center">
+
+                <img id="imagenZoom"
+                     class="img-fluid rounded">
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!----------------------FIN MODAL ZOOM IMAGENES--------------------------->
+<!----------------------TOAST PARA MOSTRAR MENSAJES----------------------->
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
+
+    <div id="toastMensaje" class="toast align-items-center text-bg-success border-0 shadow-lg">
+        <div class="d-flex">
+
+            <div class="toast-body" id="toastTexto">
+                Operación realizada
+            </div>
+
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast">
+            </button>
+
+        </div>
+    </div>
+
+</div>
+<!----------------------FIN TOAST MENSAJES-------------------------------->
+{% endblock %}
+{% block scripts %}{% endblock %}
+</body>
+</html>
