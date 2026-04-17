@@ -32,6 +32,10 @@ DEBUG = False
 # Confía en el host que viene por proxy
 USE_X_FORWARDED_HOST = True
 
+# Tiempo de la sesion 120 (2 minutos)
+SESSION_COOKIE_AGE = 1800
+
+
 # Indica a Django que si X-Forwarded-Proto dice 'https', considere la solicitud segura
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

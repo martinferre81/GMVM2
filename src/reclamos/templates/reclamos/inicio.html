@@ -3,6 +3,7 @@
 {% block title %}Reclamos - GMVM{% endblock %}
 
 {% block content %}
+{% if not es_sector %}
 <div class="row mb-3 text-center align-items-stretch" xmlns:else="http://www.w3.org/1999/xhtml" xmlns:else="http://www.w3.org/1999/xhtml">
         <div class="col-md-2">
             <div class="card text-bg-primary shadow-sm h-100 card-dashboard">
@@ -63,23 +64,22 @@
            </div>
         </div>
     </div>
-
 </div>
+{% endif %}
 
-
-<div class="tabla-reclamos-container">
+<div class="tabla-reclamos-container {% if es_sector %}tabla-sector{% endif %}">
     <table id="tablaReclamos" class="table table-bordered table-striped table-hover align-middle">
         <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Usuario</th>
+                    <th>Vecino</th>
+                    <th>Domicilio</th>
+                    <th>Descripcion</th>
                     <th>Fecha Creación</th>
                     <th>Fecha Cierre</th>
                     <th>Tipo</th>
                     <th>Prioridad</th>
-                    <th>Título</th>
                     <th>Estado</th>
-                    <th>Vecino</th>
                     <th> </th>
 
                 </tr>
@@ -92,8 +92,11 @@
                 title="Este reclamo está demorado hace {{ reclamo.dias_demora }} días" {% endif %}>
 
                 <td>{{ reclamo.id }}</td>
-                <td>{{ reclamo.usuario|capfirst }}</td>
-                <td>{{ reclamo.fecha_creacion }}</td>
+                <td>{{ reclamo.apellido_contacto }} {{ reclamo.nombres_contacto}}</td>
+                <!--td>{{ reclamo.id_contribuyente.apellido }} {{ reclamo.id_contribuyente.nombres }}</td-->
+                <td>{{ reclamo.direccion }}</td>
+                <td>{{ reclamo.descripcion }}</td>
+                <td>{{ reclamo.fecha_creacion|default:"—" }}</td>
                 <td>{{ reclamo.fecha_cierre|default:"—" }}</td>
                 <td>{{ reclamo.tipo_reclamo }}</td>
 
@@ -106,8 +109,6 @@
                         <span class="badge bg-success badge-custom">{{ reclamo.get_prioridad_display }}</span>
                       {% endif %}
                 </td>
-
-                <td>{{ reclamo.titulo }}</td>
 
                 <td>
                       {% if reclamo.estado.nombre == "INGRESO" %}
@@ -129,9 +130,9 @@
                       {% endif %}
                 </td>
 
-                <td>{{ reclamo.id_contribuyente }}</td>
+                <!--td>{{ reclamo.id_contribuyente }}</td-->
                 <td class="text-center">
-                    <div class="d-flex justify-content-center align-items-center gap-2">
+                    <div class="d-flex justify-content-center align-items-center gap-3">
                         <i class="fa-solid fa-pen text-primary editar-reclamo"
                            style="cursor:pointer"
                            data-id="{{ reclamo.id }}">
@@ -158,6 +159,7 @@
     </table>
 </div>
 
+{% if not es_sector %}
 <!--------------------------------- Graficos estadisticos ----------------------------------->
 <div class="row mt-4">
 
@@ -196,6 +198,7 @@
 
 </div>
 <!---------------------------------Fin Graficos estadisticos ----------------------------------->
+{% endif %}
 {% endblock %}
 
 {% block sidebar_right %}
@@ -267,9 +270,18 @@
                 </select>
             </div>
 
-            <button class="btn btn-primary btn-sm w-100">
-                <i class="fa-solid fa-magnifying-glass"></i> Aplicar filtros
-            </button>
+            <div class="d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    Aplicar filtros
+                </button>
+
+                <a href="{% url 'dashboard' %}?ver_todos=1"
+                   class="btn btn-secondary btn-sm">
+                    Ver últimos 100
+                </a>
+            </div>
+
+
 
         </form>
     </div>
@@ -301,553 +313,10 @@
 
 
 
-<!-- MODAL NUEVO RECLAMO -->
-<div class="modal fade" id="modalReclamo" tabindex="-1">
-  <div class="modal-dialog modal-md modal-dialog-centered">
-    <div class="modal-content shadow-sm">
-
-      <form method="POST" id="formReclamo" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="hidden" name="reclamo_id" id="reclamo_id">
-
-        <!-- HEADER -->
-        <div class="modal-header py-2 px-3">
-          <h6 class="modal-title mb-0" id="modalTitulo">
-            <i class="fa-solid fa-plus me-1 text-primary"></i>
-            Nuevo Reclamo
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <!-- ERRORES -->
-        {% if form.errors %}
-        <div class="alert alert-danger m-2 py-2 small">
-          {{ form.errors }}
-        </div>
-        {% endif %}
-
-        <!-- BODY -->
-        <div class="modal-body px-3 py-2 small">
-
-          <!-- BLOQUE PRINCIPAL -->
-          <div class="row g-2">
-
-            <!-- 👤 CONTRIBUYENTE -->
-            <div class="col-12">
-              <label class="form-label mb-1 fw-semibold">Contribuyente</label>
-              {{ form.id_contribuyente }}
-            </div>
-
-            <!-- 📝 TITULO -->
-            <div class="col-12">
-              <label class="form-label mb-1">Título</label>
-              {{ form.titulo }}
-            </div>
-
-            <!-- 🧾 DESCRIPCION -->
-            <div class="col-12">
-              <label class="form-label mb-1">Descripción</label>
-              {{ form.descripcion }}
-            </div>
-
-          </div>
-
-          <!-- ⚙️ BLOQUE SEPARADO -->
-          <div class="row mt-2">
-            <div class="col-12">
-              <div class="border rounded p-2 bg-light-subtle">
-
-                <div class="row g-2">
-
-                  <div class="col-md-4 d-flex flex-column">
-                    <label class="form-label mb-1">Tipo</label>
-                    {{ form.tipo_reclamo }}
-                  </div>
-
-                  <div class="col-md-4 d-flex flex-column">
-                    <label class="form-label mb-1">Estado</label>
-                    {{ form.estado }}
-                  </div>
-
-                  <div class="col-md-4 d-flex flex-column">
-                      <label class="form-label mb-1">Prioridad</label>
-                      {{ form.prioridad }}
-                  </div>
-
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-          <!-- 📷 FOTOS -->
-          <div class="row mt-2">
-            <div class="col-12">
-              <label class="form-label mb-1">Fotos</label>
-              <input type="file"
-                     name="fotos"
-                     class="form-control form-control-sm"
-                     multiple
-                     accept="image/*">
-            </div>
-          </div>
-
-          <!-- 🧑‍💻 OBSERVACION -->
-          <div class="row mt-2">
-            <div class="col-12">
-              <label class="form-label mb-1">Observación operador</label>
-              <textarea name="comentario_operador"
-                        class="form-control form-control-sm"
-                        rows="3"
-                        placeholder="Detalle del cambio..."></textarea>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- FOOTER -->
-        <div class="modal-footer py-2 px-3">
-          <button type="submit" class="btn btn-sm btn-success" id="btnGuardar"> <i class="fa-solid fa-check me-1"></i> Guardar </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal"> Cancelar </button>
-        </div>
-
-      </form>
-
-    </div>
-  </div>
-</div>
-<!-- MODAL HISTORIAL DE UN RECLAMO -->
-<div class="modal fade" id="modalHistorial" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-historial">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fa-solid fa-clock-rotate-left"></i> Historial del Reclamo
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body modal-historial-body">
-
-        <table class="table table-sm table-bordered tabla-historial">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Usuario</th>
-                    <th>Acción</th>
-                    <th>Cambios</th>
-                    <th>Comentario</th>
-                </tr>
-            </thead>
-
-            <tbody id="tabla_historial">
-
-            </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-  </div>
-</div>
-<!-- FIN MODAL HISTORIAL DE UN RECLAMO -->
-
-<!-- MODAL CONFIRMACION ELIMINAR RECLAMO -->
-<div class="modal fade" id="modalConfirmarAnular" tabindex="-1">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    Confirmar anulación
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-                 El reclamo seleccionado esta por cambiar de estado.
-                ¿Está seguro que desea <b>anular este reclamo</b>?
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-
-                <button class="btn btn-danger" id="btnConfirmarAnular">
-                    <i class="fa-solid fa-trash"></i>
-                    Anular reclamo
-                </button>
-            </div>
-
-        </div>
-    </div>
-</div>
-<!------------- FIN MODAL ELIMINAR RECLAMO ----------------------------->
-
-<!-----------------------MODAL GALERIA DE IMAGENES---------------------->
-<div class="modal fade" id="modalFotos">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fa-solid fa-camera"></i> Fotos del reclamo
-                </h5>
-
-                <button class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-
-                <div class="row" id="galeriaFotos"></div>
-
-            </div>
-
-        </div>
-    </div>
-</div>
-<!-----------------------FIN MODAL GALERIA DE IMAGENES---------------------->
-<!-----------------------MODAL ZOON PARA IMAGENES--------------------------->
-<div class="modal fade" id="modalZoom">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-body text-center">
-
-                <img id="imagenZoom"
-                     class="img-fluid rounded">
-
-            </div>
-
-        </div>
-    </div>
-</div>
-<!----------------------FIN MODAL ZOOM IMAGENES--------------------------->
-<!----------------------TOAST PARA MOSTRAR MENSAJES----------------------->
-<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
-
-    <div id="toastMensaje" class="toast align-items-center text-bg-success border-0 shadow-lg">
-        <div class="d-flex">
-
-            <div class="toast-body" id="toastTexto">
-                Operación realizada
-            </div>
-
-            <button type="button"
-                    class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast">
-            </button>
-
-        </div>
-    </div>
-
-</div>
-<!----------------------FIN TOAST MENSAJES-------------------------------->
-
 
 
 <script>
-let reclamoAEliminar = null;
-
-var tabla = $('#tablaReclamos').DataTable({
-    language: {
-        emptyTable: "No se encontraron reclamos",
-        zeroRecords: "No se encontraron coincidencias con los filtros"
-    },
-    pageLength: 35,
-    dom: 'rt',
-    paging: false,
-    info: false,
-    lengthChange: false
-
-});
-
-$('#busquedaGeneral').on('keyup', function () {
-    tabla.search(this.value).draw();
-});
-
-let reclamoSeleccionado = null
-
-document.querySelectorAll(".fila-reclamo").forEach(fila => {
-
-    fila.addEventListener("click", function(){
-
-        document.querySelectorAll(".fila-reclamo").forEach(f=>{
-            f.classList.remove("fila-seleccionada")
-        })
-
-        this.classList.add("fila-seleccionada")
-
-        reclamoSeleccionado = this.dataset.id
-        document.getElementById("btnEditar").disabled = false
-        document.getElementById("btnEliminar").disabled = false
-    })
-
-})
-
-document.querySelectorAll(".fila-reclamo").forEach(fila => {
-
-    fila.addEventListener("dblclick", function(){
-        let id = this.dataset.id
-        document.getElementById("reclamo_id").value = id;
-        abrirEdicion(id)
-    })
-
-})
-
-document.querySelectorAll(".editar-reclamo").forEach(icono => {
-
-    icono.addEventListener("click", function(){
-
-        let id = this.dataset.id
-        document.getElementById("reclamo_id").value = id;
-        document.querySelector("[name='comentario_operador']").value = ""
-        abrirEdicion(id)
-
-    })
-
-})
-
-function abrirEdicion(id){
-
-    fetch(`/dashboard/${id}/`)
-    .then(response => response.json())
-    .then(data => {
-        console.log(data)
-        document.getElementById("modalTitulo").innerHTML =
-            '<i class="fa-solid fa-pen"></i> Editar Reclamo #' + data.id
-
-        document.getElementById("btnGuardar").innerText = "Actualizar"
-        document.querySelector("[name='comentario_operador']").value = ""
-        document.getElementById("reclamo_id").value = data.id
-        let select = $("#id_id_contribuyente")
-        select.val(data.id_contribuyente).trigger('change')
-        select.prop("disabled", true)
-        document.getElementById("id_titulo").value = data.titulo
-        document.getElementById("id_descripcion").value = data.descripcion
-        document.getElementById("id_prioridad").value = data.prioridad
-        document.getElementById("id_estado").value = data.estado
-        document.getElementById("id_tipo_reclamo").value = data.tipo_reclamo
-
-        new bootstrap.Modal(document.getElementById('modalReclamo')).show()
-
-    })
-
-}
-
-
-
-document.querySelector('[data-bs-target="#modalReclamo"]').addEventListener("click", function(){
-
-    document.getElementById("modalTitulo").innerHTML =
-        '<i class="fa-solid fa-plus"></i> Nuevo Reclamo'
-    document.querySelector("#modalReclamo form").reset()
-    document.getElementById("btnGuardar").innerText = "Crear Reclamo"
-    document.getElementById("id_id_contribuyente").readOnly = false
-    document.getElementById("reclamo_id").value = ""
-
-})
-
-document.getElementById("btnEditar").addEventListener("click", function(){
-
-    if(reclamoSeleccionado){
-        document.getElementById("reclamo_id").value = reclamoSeleccionado
-        document.querySelector("[name='comentario_operador']").value = ""
-        abrirEdicion(reclamoSeleccionado)
-    }
-
-})
-
-document.getElementById("btnEliminar").addEventListener("click", function(){
-    reclamoAEliminar = reclamoSeleccionado;
-
-    let modal = new bootstrap.Modal(document.getElementById('modalConfirmarAnular'));
-    modal.show();
-})
-
-document.getElementById("btnConfirmarAnular").addEventListener("click", function(){
-
-    if(reclamoSeleccionado){
-        document.getElementById("reclamo_id").value = reclamoSeleccionado
-        fetch(`/dashboard/anular/${reclamoAEliminar}/`)
-        .then(response => response.json())
-        .then(data => {
-
-            if(data.ret === 1){
-
-                let fila = document.querySelector(`tr[data-id="${reclamoAEliminar}"]`);
-
-                if(fila){
-
-                    let celdaEstado = fila.children[7];
-
-                    celdaEstado.innerHTML =
-                        '<span class="badge bg-dark badge-custom">ANULADO</span>';
-
-                    fila.classList.remove("table-danger");
-
-                }
-
-            }else{
-                alert("Error al anular el reclamo");
-            }
-
-            bootstrap.Modal.getInstance(
-                document.getElementById('modalConfirmarAnular')
-            ).hide();
-
-        });
-    }
-});
-
-
-function eliminarReclamo(id){
-   
-    fetch(`/dashboard/anular/${id}/`)
-    .then(response => response.json())
-    .then(data => {
-                if(data.ret === 1){
-
-                            // buscar la fila del reclamo
-                            let fila = document.querySelector(`tr[data-id="${id}"]`);
-
-                            if(fila){
-
-                                // buscar columna de estado (columna 8)
-                                let celdaEstado = fila.children[7];
-
-                                celdaEstado.innerHTML =
-                                    '<span class="badge bg-dark badge-custom">ANULADO</span>';
-
-                                // quitar color rojo si estaba demorado
-                                fila.classList.remove("table-danger");
-
-                            }
-
-                        }else{
-                            alert("Error al anular el reclamo");
-                        }
-    })
-}
-
-document.querySelectorAll(".ver-historial").forEach(icono => {
-
-    icono.addEventListener("click", function(){
-        let id = this.dataset.id
-
-        fetch(`/dashboard/${id}/historial/`)
-        .then(response => response.json())
-        .then(data => {
-
-            let tabla = document.getElementById("tabla_historial")
-            tabla.innerHTML = ""
-
-            data.forEach(h => {
-
-                tabla.innerHTML += `
-                                    <tr>
-                                        <td>${h.fecha}</td>
-                                        <td>${h.usuario.toUpperCase()}</td>
-                                        <td>${h.accion}</td>
-                                        <td>${h.cambios}</td>
-                                        <td>${h.comentario}</td>
-                                    </tr>
-                                    `
-            })
-
-            new bootstrap.Modal(document.getElementById('modalHistorial')).show()
-
-        })
-
-    })
-
-})
-document.querySelectorAll(".ver-fotos").forEach(btn => {
-    btn.addEventListener("click", function(){
-        let id = this.dataset.id
-        verFotos(id)
-    })
-})
-
-function verFotos(id){
-
-    fetch(`/dashboard/fotos/${id}/`)
-    .then(response => response.json())
-    .then(data => {
-        let galeria = document.getElementById("galeriaFotos")
-        galeria.innerHTML = ""
-        if (data.length == 0) {
-                galeria.innerHTML = `<div class="text-center"><h5>No se encontraron imagenes para este reclamo</h5></div>`
-        }
-
-        data.forEach(f => {
-            console.log(f)
-            let col = document.createElement("div")
-            col.className = "col-md-3 mb-3"
-            galeria.innerHTML += `
-                                    <div class="col-md-3 mb-3">
-                                        <div class="card shadow-sm">
-                                            <img src="${f.url}"
-                                                 class="card-img-top"
-                                                 style="height:150px; object-fit:cover; cursor:pointer"
-                                                 onclick="zoomFoto('${f.url}')">
-                                            <div class="card-body text-center p-2">
-                                                <a href="${f.url}" download class="btn btn-sm btn-success">
-                                                    <i class="fa-solid fa-download"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-danger"
-                                                        onclick="eliminarFoto(${f.id})">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    `
-            galeria.appendChild(col)
-        })
-        new bootstrap.Modal(document.getElementById('modalFotos')).show()
-    })
-}
-
-function zoomFoto(url){
-    document.getElementById("imagenZoom").src = url
-    new bootstrap.Modal(document.getElementById('modalZoom')).show()
-}
-
-function eliminarFoto(id){
-    if(!confirm("Eliminar esta foto?")) return
-    fetch(`/dashboard/foto/eliminar/${id}/`)
-    .then(r => r.json())
-    .then(data => {
-        if(data.ret == 1){
-            mostrarToast("Se ha eliminado la imagen.")
-            setTimeout(() => {
-                location.reload()
-            }, 2800)
-
-        }
-    })
-}
-
-function mostrarToast(mensaje){
-
-    let toastEl = document.getElementById('toastMensaje')
-    let toastTexto = document.getElementById('toastTexto')
-    toastTexto.innerText = mensaje
-    let toast = new bootstrap.Toast(toastEl, {
-        delay: 2800
-    })
-    toast.show()
-}
 
 </script>
 
 {% endblock %}
-
-
-
-

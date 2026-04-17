@@ -67,7 +67,7 @@
     <div class="content">
         <p>Hola {{ nombre }},</p>
 
-        <p>{{ mensaje_principal }}</p>
+        <p>{{ mensaje_principal|safe }}</p>
 
         <div class="box">
             <strong>Número:</strong> {{ numero }}<br>

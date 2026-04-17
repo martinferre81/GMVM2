@@ -53,9 +53,16 @@ class Reclamo(models.Model):
 
     id_contribuyente = models.ForeignKey(Contribuyente,on_delete=models.SET_NULL,null=True,blank=True)
     direccion = models.CharField(max_length=250, blank=True, null=True)
+    entre_calle_1 = models.CharField(max_length=120, blank=True, null=True)
+    entre_calle_2 = models.CharField(max_length=120, blank=True, null=True)
     numero = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    titulo = models.CharField(max_length=200)
+    titulo = models.CharField(max_length=200, blank=True, null=True)
     descripcion = models.TextField()
+    apellido_contacto = models.CharField(max_length=80, blank=True, null=True)
+    nombres_contacto = models.CharField(max_length=80, blank=True, null=True)
+    telefono_contacto = models.CharField(max_length=50, blank=True, null=True)
+    email_contacto = models.EmailField(blank=True, null=True)
+    dni_ingresado = models.CharField(max_length=20, blank=True, null=True)
 
     tipo_reclamo = models.ForeignKey(
         TipoReclamo,

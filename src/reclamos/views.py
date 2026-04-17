@@ -1,5 +1,7 @@
 import calendar
+import locale
 from os import write
+
 
 from django.contrib.auth.models import User
 from django.db.models.functions import ExtractMonth
@@ -14,7 +16,6 @@ from .models import Reclamo, HistorialReclamo, ReclamoFoto, Contribuyente
 from .forms import ReclamoForm
 from django.http import JsonResponse
 from .models import HistorialReclamo, EstadoReclamo
-from datetime import datetime
 from django.utils import timezone
 from .models import EstadoReclamo, TipoReclamo
 from django.db.models import Count
@@ -22,16 +23,30 @@ from django.utils.timezone import now
 from django.db.models import Avg, F, ExpressionWrapper, DurationField
 from datetime import timedelta
 from .utils_email import enviar_mail_reclamo_async_html
+from datetime import datetime, timedelta, date
+from django.db.models import Count, ExpressionWrapper, F, DurationField, Avg
+import calendar
+from django.db.models import OuterRef, Subquery, Count
+from django.conf import settings
+
+
 
 
 # Create your views here.
+from datetime import datetime, timedelta, date  # ðŸ”¥ agregado date
 @login_required(login_url='/login/')
 def inicio(request):
-    user = request.user
 
+    import traceback
+
+    user = request.user
+    es_admin = request.user.groups.filter(name='ADMINISTRADOR').exists()
+    es_sector = not es_admin
     hoy = timezone.now()
 
-    # Contar los reclamos del mes
+    # ------------------------
+    # ESTADÍSTICAS
+    # ------------------------
     reclamos_mes = Reclamo.objects.filter(
         fecha_creacion__year=hoy.year,
         fecha_creacion__month=hoy.month
@@ -65,277 +80,316 @@ def inicio(request):
         )
     ).aggregate(promedio=Avg('duracion'))
 
-    tiempo_promedio = tiempos['promedio']
+    tiempo_promedio = (
+        f"{tiempos['promedio'].days} días"
+        if tiempos['promedio']
+        else "-"
+    )
 
-    if tiempo_promedio:
-        dias = tiempo_promedio.days
-        tiempo_promedio = f"{dias} días"
-    else:
-         tiempo_promedio = "-"
-
-    # Fechas predeterminadas para el mes
-    primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
-    if hoy.month == 12:
-        siguiente_mes = hoy.replace(year=hoy.year + 1, month=1, day=1)
-    else:
-        siguiente_mes = hoy.replace(month=hoy.month + 1, day=1)
-
-    fecha_inicio_mes = primer_dia_mes.date()
-    ultimo_dia = calendar.monthrange(hoy.year, hoy.month)[1]
-    fecha_fin_mes = hoy.replace(day=ultimo_dia).date()
-
-    # Obtener las fechas del formulario, si existen
+    # ------------------------
+    # FECHAS
+    # ------------------------
     fecha_desde = request.GET.get('fecha_desde')
     fecha_hasta = request.GET.get('fecha_hasta')
 
-    if not fecha_desde:
-        fecha_desde = fecha_inicio_mes.strftime('%Y-%m-%d')
+    if not fecha_desde or not fecha_hasta:
+        primer_dia = hoy.replace(day=1)
+        ultimo_dia = calendar.monthrange(hoy.year, hoy.month)[1]
 
-    if not fecha_hasta:
-        fecha_hasta = fecha_fin_mes.strftime('%Y-%m-%d')
+        fecha_desde = primer_dia.strftime('%Y-%m-%d')
+        fecha_hasta = hoy.replace(day=ultimo_dia).strftime('%Y-%m-%d')
 
-    # QUERY BASE (todos los reclamos del mes)
+    # ------------------------
+    # QUERY BASE
+    # ------------------------
     reclamos = Reclamo.objects.select_related(
         'usuario', 'estado', 'tipo_reclamo'
-    ).annotate(
-        total_fotos=Count('fotos')
-    ).filter(
-        fecha_creacion__date__gte=fecha_desde,
-        fecha_creacion__date__lte=fecha_hasta
     )
 
-    # FILTRO POR GRUPO (Siempre asignar un grupo, sino muestra todo al usuario)
-    if request.user.groups.filter(name="ADMINISTRADOR").exists():
-        pass
-    else:
+    # ------------------------
+    # SEGURIDAD
+    # ------------------------
+    if not es_admin:
         grupos = list(request.user.groups.values_list('name', flat=True))
 
         if grupos:
-            reclamos = reclamos.filter(tipo_reclamo__nombre__in=grupos
-       )
+            reclamos = reclamos.filter(
+                tipo_reclamo__nombre__in=grupos
+            ).distinct()
         else:
-            reclamos = reclamos.none()
+            reclamos = Reclamo.objects.none()
 
-    # Filtros adicionales
-    estado = request.GET.get('estado')
-    vecino = request.GET.get('vecino')
-    tipo = request.GET.get('tipo')
-    prioridad = request.GET.get('prioridad')
+    # ------------------------
+    # VER TODOS
+    # ------------------------
+    ver_todos = request.GET.get("ver_todos") in ["1", "true", "True", "on"]
 
-    if estado:
-        reclamos = reclamos.filter(estado_id=estado)
+    # ------------------------
+    # FILTROS
+    # ------------------------
+    if not ver_todos:
 
-    if vecino:
-        reclamos = reclamos.filter(id_contribuyente=vecino)
+        if request.GET.get('estado'):
+            reclamos = reclamos.filter(estado_id=request.GET.get('estado'))
 
-    if tipo:
-        reclamos = reclamos.filter(tipo_reclamo_id=tipo)
+        if request.GET.get('vecino'):
+            reclamos = reclamos.filter(id_contribuyente=request.GET.get('vecino'))
 
-    if prioridad:
-        reclamos = reclamos.filter(prioridad=prioridad)
+        if request.GET.get('tipo'):
+            reclamos = reclamos.filter(tipo_reclamo_id=request.GET.get('tipo'))
 
-    if request.GET.get("demorados"):
-        reclamos = Reclamo.objects.select_related(
-            'usuario', 'estado', 'tipo_reclamo'
-        ).annotate(
+        if request.GET.get('prioridad'):
+            reclamos = reclamos.filter(prioridad=request.GET.get('prioridad'))
+
+        if request.GET.get("demorados"):
+            reclamos = reclamos.filter(
+                estado__nombre="EN_PROCESO",
+                fecha_creacion__lt=hoy - timedelta(days=5)
+            )
+
+        if fecha_desde:
+            fecha_desde_dt = datetime.strptime(fecha_desde, "%Y-%m-%d")
+            reclamos = reclamos.filter(fecha_creacion__gte=fecha_desde_dt)
+
+        if fecha_hasta:
+            fecha_hasta_dt = datetime.strptime(fecha_hasta, "%Y-%m-%d")
+            fecha_hasta_dt = fecha_hasta_dt.replace(hour=23, minute=59, second=59)
+            reclamos = reclamos.filter(fecha_creacion__lte=fecha_hasta_dt)
+
+    # ------------------------
+    # ORDEN + LIMIT
+    # ------------------------
+    reclamos = reclamos.annotate(
         total_fotos=Count('fotos')
-        ).filter(
-            estado__nombre="EN_PROCESO",
-            fecha_creacion__lt=timezone.now() - timedelta(days=5)
-        )
+    ).order_by('-fecha_creacion')
 
-    form = ReclamoForm()
+    if ver_todos:
+        reclamos = reclamos[:200]
 
+    # ------------------------
+    # FORM
+    # ------------------------
+    form = ReclamoForm(es_admin=es_admin)
+
+    # ------------------------
+    # POST (AJAX SEGURO)
+    # ------------------------
     if request.method == 'POST':
-        print ("Entra por request.method == 'POST'")
-        reclamo_id = request.POST.get('reclamo_id')
 
-        estado_anterior = None
-        tipo_anterior = None
-        comentario_operador = request.POST.get('comentario_operador', '')
-
-        if reclamo_id:
-            # Editar un reclamo existente
-            reclamo = Reclamo.objects.get(id=reclamo_id)
-            vecino_original = reclamo.id_contribuyente
-
-            # Guardar valores anteriores para ver si cambió algo y actualizar el historial
-            estado_anterior = reclamo.estado
-            tipo_anterior = reclamo.tipo_reclamo
-            prioridad_anterior = reclamo.prioridad
-            titulo_anterior = reclamo.titulo
-            descripcion_anterior = reclamo.descripcion
-            vecino_anterior = reclamo.id_contribuyente
-
-            form = ReclamoForm(request.POST, instance=reclamo)
-        else:
-            # Nuevo reclamo
-            form = ReclamoForm(request.POST)
-
-        if form.is_valid():
-            reclamo = form.save(commit=False)
-
-            es_nuevo = reclamo._state.adding
+        try:
+            reclamo_id = request.POST.get('reclamo_id')
 
             if reclamo_id:
-                reclamo.id_contribuyente = vecino_original
+                try:
+                    reclamo = Reclamo.objects.get(id=reclamo_id)
+                    original = Reclamo.objects.get(id=reclamo_id)
+                    vecino_original = reclamo.id_contribuyente
+                except Reclamo.DoesNotExist:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "Reclamo no encontrado"
+                    }, status=404)
+            else:
+                reclamo = None
+                original = None
+                vecino_original = None
 
-            if not reclamo_id:
+            form = ReclamoForm(
+                request.POST,
+                request.FILES,
+                instance=reclamo if reclamo_id else None,
+                es_admin=es_admin
+            )
+
+            if not form.is_valid():
+                return JsonResponse({
+                    "success": False,
+                    "message": "Error de validación",
+                    "errors": form.errors
+                }, status=400)
+
+            reclamo = form.save(commit=False)
+
+            dni = request.POST.get("dni", "").strip()
+            apellido = request.POST.get("apellido", "").strip().upper()
+            nombres = request.POST.get("nombres", "").strip().upper()
+            telefono = request.POST.get("telefono", "").strip().upper()
+            email = request.POST.get("email", "").strip().lower()
+
+            if dni:
+                contribuyente, creado = Contribuyente.objects.get_or_create(
+                    dni=dni,
+                    defaults={
+                        "apellido": apellido,
+                        "nombres": nombres,
+                        "telefono": telefono,
+                        "email": email
+                    }
+                )
+
+                if not creado:
+                    # actualizar solo si vino dato nuevo
+                    if apellido:
+                        contribuyente.apellido = apellido
+                    if nombres:
+                        contribuyente.nombres = nombres
+                    if telefono:
+                        contribuyente.telefono = telefono
+                    if email:
+                        contribuyente.email = email
+
+                    contribuyente.save()
+
+                reclamo.id_contribuyente = contribuyente
+
+            else:
+                contribuyente = Contribuyente.objects.get(dni="999999999")
+                reclamo.id_contribuyente = contribuyente
+
+            reclamo.dni_ingresado = dni
+            reclamo.apellido_contacto = apellido.upper() or contribuyente.apellido
+            reclamo.nombres_contacto = nombres.upper() or contribuyente.nombres
+            reclamo.telefono_contacto = telefono or contribuyente.telefono
+            reclamo.email_contacto = email.lower() or contribuyente.email.lower()
+
+
+            # restricciones
+            if not es_admin and reclamo_id:
+                reclamo.titulo = original.titulo
+                reclamo.descripcion = original.descripcion
+                reclamo.tipo_reclamo = original.tipo_reclamo
+
+            if reclamo_id and not request.POST.get("dni"):
+                reclamo.id_contribuyente = vecino_original
+            else:
                 reclamo.usuario = user
 
             reclamo.usuario_ult_modificacion = user
 
-            if reclamo.estado.nombre == "FINALIZADO" and not reclamo.fecha_cierre:
-                reclamo.fecha_cierre = timezone.now()
+            # cierre automático
+            if reclamo.estado_id:
+                if reclamo.estado.nombre == "FINALIZADO" and not reclamo.fecha_cierre:
+                    reclamo.fecha_cierre = timezone.now()
 
             reclamo.save()
-            #Enviamos mail al contribuyente por un nuevo reclamo
 
-            if (es_nuevo and reclamo.id_contribuyente.email):
-                print("Enviando mail")
-                enviar_mail_reclamo_async_html(reclamo,f"Reclamo recibido Nº {reclamo.numero}","Su reclamo fue registrado correctamente.")
-
-            #guardamos las fotos que se cargaron el en input
+            # ------------------------
+            # FOTOS (sin duplicar)
+            # ------------------------
             fotos = request.FILES.getlist("fotos")
-            cantidad_fotos = 0
-            for f in fotos:
+            cantidad_fotos = len(fotos)
+
+            for foto in fotos:
                 ReclamoFoto.objects.create(
                     reclamo=reclamo,
-                    imagen=f
+                    imagen=foto
                 )
-                cantidad_fotos = cantidad_fotos + 1
+
+            # ------------------------
+            # HISTORIAL
+            # ------------------------
+            accion = "MODIFICACION" if reclamo_id else "CREACION"
 
             if cantidad_fotos > 0:
+                accion = f"AGREGO_{cantidad_fotos}_FOTOS" if cantidad_fotos > 1 else "AGREGO_FOTO"
+
+            comentario = request.POST.get("comentario_operador") or ""
+
+            try:
                 HistorialReclamo.objects.create(
                     reclamo=reclamo,
                     usuario=user,
-                    accion="Carga de imagenes",
-                    comentario=f"Se agregaron {cantidad_fotos} imagen/es"
+                    accion=accion,
+                    estado_anterior=original.estado if original and original.estado else None,
+                    estado_nuevo=reclamo.estado if reclamo.estado else None,
+                    prioridad_anterior=original.prioridad if original else None,
+                    prioridad_nueva=reclamo.prioridad if reclamo else None,
+                    titulo_anterior=original.titulo if original else None,
+                    titulo_nuevo=reclamo.titulo,
+                    descripcion_anterior=original.descripcion if original else None,
+                    descripcion_nueva=reclamo.descripcion,
+                    comentario=comentario
                 )
+            except Exception as e:
+                print("ERROR HISTORIAL:", str(e))
 
-            if reclamo_id:
-                cambios = False
-                historial = HistorialReclamo(
-                    reclamo=reclamo,
-                    usuario=user,
-                    accion="Actualización de reclamo",
-                    comentario=comentario_operador
-                )
+            #Enviamos mail si se actualizo el estado
+            # ------------------------
+            try:
+                if reclamo.id_contribuyente and reclamo.id_contribuyente.email:
+                    PRIORIDAD_LABELS = {
+                        1: "Baja",
+                        2: "Media",
+                        3: "Alta"
+                    }
+                    cambios_mail = []
 
-                # Ver si ha habido cambios en los valores del reclamo
-                if estado_anterior != reclamo.estado:
-                    historial.estado_anterior = estado_anterior
-                    historial.estado_nuevo = reclamo.estado
-                    cambios = True
+                    if original:
+                        if original.estado != reclamo.estado:
+                            cambios_mail.append(f"Estado: {original.estado} → {reclamo.estado}")
 
-                if tipo_anterior != reclamo.tipo_reclamo:
-                    historial.tipo_anterior = tipo_anterior
-                    historial.tipo_nuevo = reclamo.tipo_reclamo
-                    cambios = True
+                        if original.prioridad != reclamo.prioridad:
+                            cambios_mail.append(f"Prioridad: {PRIORIDAD_LABELS.get(original.prioridad, '-')} → {PRIORIDAD_LABELS.get(reclamo.prioridad, '-')}")
 
-                if prioridad_anterior != reclamo.prioridad:
-                    historial.prioridad_anterior = prioridad_anterior
-                    historial.prioridad_nueva = reclamo.prioridad
-                    cambios = True
+                    if cambios_mail:
+                        mensaje = "<br>".join([f"<strong>{c}</strong>" for c in cambios_mail])
 
-                if titulo_anterior != reclamo.titulo:
-                    historial.titulo_anterior = titulo_anterior
-                    historial.titulo_nuevo = reclamo.titulo
-                    cambios = True
-
-                if descripcion_anterior != reclamo.descripcion:
-                    historial.descripcion_anterior = descripcion_anterior
-                    historial.descripcion_nueva = reclamo.descripcion
-                    cambios = True
-
-                if vecino_anterior != reclamo.id_contribuyente:
-                    historial.vecino_anterior = vecino_anterior
-                    historial.vecino_nuevo = reclamo.id_contribuyente.id if reclamo.id_contribuyente else None
-                    cambios = True
-
-                if cambios or comentario_operador:
-                    historial.save()
-
-                    if estado_anterior != reclamo.estado and reclamo.estado.nombre == "FINALIZADO":
-                        # Solo enviamos si cambiamos el estado a Finalizado, si es otra modificacion no se envia notificacion
                         enviar_mail_reclamo_async_html(
                             reclamo,
-                            f"Reclamo Nº {reclamo.numero} finalizado",
-                            "Su reclamo ha sido resuelto. ¡Gracias por comunicarse con nosotros!"
+                            f"Actualización de reclamo Nº {reclamo.numero}",
+                            f"Su reclamo tuvo cambios: {mensaje}"
                         )
 
-                    else:
-                        #Solo enviamos si cambiamos el estado, si es otra modificacion no se envia notificacion
-                        if estado_anterior != reclamo.estado:
-                            enviar_mail_reclamo_async_html(
-                                reclamo,
-                                f"Actualización de reclamo Nº {reclamo.numero}",
-                                f"El estado de su reclamo cambió a: {reclamo.estado}"
-                            )
-            else:
-                HistorialReclamo.objects.create(
-                    reclamo=reclamo,
-                    usuario=user,
-                    accion="Nuevo reclamo",
-                    comentario=comentario_operador,
-                    estado_nuevo=reclamo.estado,
-                    tipo_nuevo=reclamo.tipo_reclamo,
-                    prioridad_nueva=reclamo.prioridad,
-                    titulo_nuevo=reclamo.titulo,
-                    descripcion_nueva=reclamo.descripcion,
-                    vecino_nuevo=reclamo.id_contribuyente.id if reclamo.id_contribuyente else None,
-                )
+            except Exception as e:
+                print("ERROR MAIL:", str(e))
 
-            return redirect('dashboard')
+            return JsonResponse({
+                "success": True,
+                "message": "✔ Guardado correctamente",
+                "reclamo_id": reclamo.id
+            })
 
+        except Exception as e:
+            print(traceback.format_exc())
 
-    # Filtra los estados y tipos activos
+            return JsonResponse({
+                "success": False,
+                "message": str(e)
+            }, status=500)
+
+    # ------------------------
+    # CONTEXTO
+    # ------------------------
     estados = EstadoReclamo.objects.filter(activo=True)
     tipos = TipoReclamo.objects.filter(activo=True)
+    vecinos = Contribuyente.objects.all().order_by('apellido')
 
-    # Grafico reclamos por tipo
-    datos_tipos = Reclamo.objects.values(
+    tipos_chart = Reclamo.objects.values(
         'tipo_reclamo__nombre'
     ).annotate(
         total=Count('id')
-    ).order_by('-total')
+    ).order_by()
 
-    labels_tipos = [d['tipo_reclamo__nombre'] for d in datos_tipos]
-    data_tipos = [d['total'] for d in datos_tipos]
+    labels_tipos = [t['tipo_reclamo__nombre'] for t in tipos_chart]
+    data_tipos = [t['total'] for t in tipos_chart]
 
-    #Datos para el grafico de reclamos por mes
-    reclamos_mes_data = (
-        Reclamo.objects
-        .filter(fecha_creacion__year=hoy.year)
-        .annotate(mes=ExtractMonth('fecha_creacion'))
-        .values('mes')
-        .annotate(total=Count('id'))
-        .order_by('mes')
+    reclamos_por_mes = Reclamo.objects.annotate(
+        mes=ExtractMonth('fecha_creacion')
+    ).values('mes').annotate(
+        total=Count('id')
+    ).order_by('mes')
+
+    labels_meses = [calendar.month_abbr[r['mes']] for r in reclamos_por_mes]
+    data_meses = [r['total'] for r in reclamos_por_mes]
+
+    estado_chart = Reclamo.objects.values(
+        'estado__nombre'
+    ).annotate(
+        total=Count('id')
     )
 
-    labels_meses = []
-    data_meses = []
-
-    meses = [
-        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-    ]
-
-    for r in reclamos_mes_data:
-        labels_meses.append(meses[r['mes'] - 1])
-        data_meses.append(r['total'])
-
-    #Datos para el grafico de reclamos por estados
-
-    reclamos_estado = (
-        Reclamo.objects
-        .values('estado__nombre')
-        .annotate(total=Count('id'))
-    )
-
-    labels_estado = [r['estado__nombre'] for r in reclamos_estado]
-    data_estado = [r['total'] for r in reclamos_estado]
-    vecinos = Contribuyente.objects.all().order_by('apellido')
+    labels_estado = [e['estado__nombre'] for e in estado_chart]
+    data_estado = [e['total'] for e in estado_chart]
 
     return render(request, 'reclamos/inicio.html', {
         'reclamos': reclamos,
@@ -348,25 +402,26 @@ def inicio(request):
         'reclamos_anulados': reclamos_anulados,
         'tiempo_promedio': tiempo_promedio,
         'reclamos_demorados': reclamos_demorados,
-        'fecha_inicio_mes': fecha_inicio_mes,
-        'fecha_fin_mes': fecha_fin_mes,
-        'fecha_desde': fecha_desde,  # fecha seleccionada
-        'fecha_hasta': fecha_hasta,  # fecha seleccionada
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'vecinos': vecinos,
+        'es_admin': es_admin,
+        'es_sector': not es_admin,
         'labels_tipos': labels_tipos,
         'data_tipos': data_tipos,
         'labels_meses': labels_meses,
         'data_meses': data_meses,
         'labels_estado': labels_estado,
         'data_estado': data_estado,
-        'vecinos' : vecinos
+        "session_age": settings.SESSION_COOKIE_AGE
     })
-
 
 @login_required(login_url='/login/')
 def lista_reclamos(request):
 
     reclamos = Reclamo.objects.all()
-    form = ReclamoForm()
+    es_admin = request.user.groups.filter(name='ADMINISTRADOR').exists()
+    form = ReclamoForm(es_admin=es_admin)
 
     hoy = timezone.now()
     primer_dia_mes = hoy.replace(day=1, hour=0, minute=0, second=0)
@@ -403,6 +458,8 @@ def lista_reclamos(request):
     estados = EstadoReclamo.objects.filter(activo=True)
     tipos = TipoReclamo.objects.filter(activo=True)
 
+
+
     return render(request, 'reclamos/lista.html', {
         'reclamos': reclamos,
         'form': form,
@@ -413,7 +470,8 @@ def lista_reclamos(request):
         'reclamos_finalizados': reclamos_finalizados,
         'reclamos_anulados': reclamos_anulados,
         'fecha_inicio_mes': fecha_inicio_mes,
-        'fecha_fin_mes': fecha_fin_mes
+        'fecha_fin_mes': fecha_fin_mes,
+        "session_age": settings.SESSION_COOKIE_AGE,
 
     })
 
@@ -431,6 +489,18 @@ def obtener_reclamo(request, id):
 
     data = {
         "id": reclamo.id,
+	    "dni": reclamo.id_contribuyente.dni if reclamo.id_contribuyente else "",
+    	"apellido": reclamo.id_contribuyente.apellido if reclamo.id_contribuyente else "",
+   	    "nombres": reclamo.id_contribuyente.nombres if reclamo.id_contribuyente else "",
+        "telefono": reclamo.id_contribuyente.telefono if reclamo.id_contribuyente else "",
+        "email": reclamo.id_contribuyente.email if reclamo.id_contribuyente else "",
+	    "direccion": reclamo.direccion or "",
+        "entre_calle_1": reclamo.entre_calle_1,
+        "entre_calle_2": reclamo.entre_calle_2,
+        "apellido_contacto": reclamo.apellido_contacto,
+        "nombres_contacto": reclamo.nombres_contacto,
+        "telefono_contacto" : reclamo.telefono_contacto,
+        "email_contacto" : reclamo.email_contacto,
         "id_contribuyente": reclamo.id_contribuyente.id if reclamo.id_contribuyente else None,
         "titulo": reclamo.titulo or "",
         "descripcion": reclamo.descripcion or "",
@@ -469,6 +539,12 @@ def eliminar_reclamo(request, id):
 @login_required(login_url='/login/')
 def obtener_historial(request, id):
 
+    PRIORIDAD_LABELS = {
+        1: "Baja",
+        2: "Media",
+        3: "Alta"
+    }
+
     historial = HistorialReclamo.objects.filter(
         reclamo_id=id
     ).select_related(
@@ -487,29 +563,35 @@ def obtener_historial(request, id):
 
         if h.estado_anterior != h.estado_nuevo:
             cambios.append(
-                f"Estado: {h.estado_anterior or '-'} → {h.estado_nuevo or '-'}"
+                f"Estado: {h.estado_anterior or '-'} -> {h.estado_nuevo or '-'}"
             )
 
         if h.tipo_anterior != h.tipo_nuevo:
             cambios.append(
-                f"Tipo: {h.tipo_anterior or '-'} → {h.tipo_nuevo or '-'}"
+                f"Tipo: {h.tipo_anterior or '-'} -> {h.tipo_nuevo or '-'}"
             )
 
         if h.prioridad_anterior != h.prioridad_nueva:
             cambios.append(
-                f"Prioridad: {h.prioridad_anterior or '-'} → {h.prioridad_nueva or '-'}"
+                f"Prioridad: {PRIORIDAD_LABELS.get(h.prioridad_anterior, '-')} → {PRIORIDAD_LABELS.get(h.prioridad_nueva, '-')}"
             )
 
         if h.titulo_anterior != h.titulo_nuevo:
-            cambios.append("Título modificado")
+            cambios.append("Titulo modificado")
 
         if h.descripcion_anterior != h.descripcion_nueva:
-            cambios.append("Descripción modificada")
+            cambios.append("Descripcion modificada")
 
         if h.vecino_anterior != h.vecino_nuevo:
             cambios.append(
-                f"Vecino: {h.vecino_anterior or '-'} → {h.vecino_nuevo or '-'}"
+                f"Vecino: {h.vecino_anterior or '-'} -> {h.vecino_nuevo or '-'}"
             )
+        if "AGREGO" in h.accion:
+            if h.accion == "AGREGO_FOTO":
+                cambios.append("Se agregó 1 foto")
+            else:
+                cantidad = h.accion.split("_")[1]
+                cambios.append(f"Se agregaron {cantidad} fotos")
 
         data.append({
             "fecha": h.fecha.strftime("%d/%m/%Y %H:%M"),
@@ -560,56 +642,94 @@ def portal_reclamos(request):
     return render(request,"reclamos/portal.html")
 
 def reclamo_wizard(request):
-
     if request.method == "POST":
 
-        dni = request.POST.get("dni")
-        apellido = request.POST.get("apellido")
-        nombres = request.POST.get("nombres")
-        telefono = request.POST.get("telefono")
-        email = request.POST.get("email")
+        dni = request.POST.get("dni", "").strip()
+        apellido = request.POST.get("apellido", "").strip().upper()
+        nombres = request.POST.get("nombres", "").strip().upper()
+        telefono = request.POST.get("telefono", "").strip().upper()
+        email = request.POST.get("email", "").strip().lower()
 
         tipo_id = request.POST.get("tipo")
+        titulo = request.POST.get("titulo", "").strip().upper()
+        descripcion = request.POST.get("descripcion", "").strip().upper()
+        direccion = request.POST.get("direccion", "").strip().upper()
+        entre_calle_1 = request.POST.get("entre_calle_1", "").strip().upper()
+        entre_calle_2 = request.POST.get("entre_calle_2", "").strip().upper()
 
-        titulo = request.POST.get("titulo")
-        descripcion = request.POST.get("descripcion")
-        direccion = request.POST.get("direccion")
+        # ---------------------------------
+        # CONTRIBUYENTE
+        # ---------------------------------
+        if dni:
+            contribuyente, creado = Contribuyente.objects.get_or_create(
+                dni=dni,
+                defaults={
+                    "apellido": apellido,
+                    "nombres": nombres,
+                    "telefono": telefono,
+                    "email": email
+                }
+            )
 
-        contribuyente, creado = Contribuyente.objects.get_or_create(
-            dni=dni,
-            defaults={
-                "apellido": apellido,
-                "nombres": nombres,
-                "telefono": telefono,
-                "email": email
-            }
-        )
+            if not creado:
+                if apellido:
+                    contribuyente.apellido = apellido
+                if nombres:
+                    contribuyente.nombres = nombres
+                if telefono:
+                    contribuyente.telefono = telefono
+                if email:
+                    contribuyente.email = email
 
+                contribuyente.save()
+
+        else:
+            contribuyente = Contribuyente.objects.get(dni="999999999")
+
+        # ---------------------------------
+        # DATOS FIJOS
+        # ---------------------------------
         estado = EstadoReclamo.objects.get(nombre="INGRESO")
-
         tipo = TipoReclamo.objects.get(id=tipo_id)
-
         usuario = User.objects.first()
 
+        # ---------------------------------
+        # CREAR RECLAMO
+        # ---------------------------------
         reclamo = Reclamo.objects.create(
             usuario=usuario,
             id_contribuyente=contribuyente,
             direccion=direccion,
+            entre_calle_1=entre_calle_1,
+            entre_calle_2=entre_calle_2,
             titulo=titulo,
             descripcion=descripcion,
             tipo_reclamo=tipo,
             estado=estado,
-            prioridad=1
+            prioridad=1,
+
+            dni_ingresado=dni,
+            apellido_contacto=apellido or contribuyente.apellido,
+            nombres_contacto=nombres or contribuyente.nombres,
+            telefono_contacto=telefono or contribuyente.telefono,
+            email_contacto=email or contribuyente.email
         )
 
-        # Enviamos el mail al contribuyente
-        if contribuyente.email:
+        # ---------------------------------
+        # MAIL
+        # ---------------------------------
+        destino = email or contribuyente.email
+
+        if destino:
             enviar_mail_reclamo_async_html(
                 reclamo,
                 f"Reclamo recibido Nº {reclamo.numero}",
                 "Su reclamo fue registrado correctamente."
             )
 
+        # ---------------------------------
+        # FOTOS
+        # ---------------------------------
         fotos = request.FILES.getlist("fotos")
 
         for foto in fotos:
@@ -665,9 +785,9 @@ def consultar_reclamo(request):
                 historial = reclamo.historial.all().order_by("fecha")
 
             except Reclamo.DoesNotExist:
-                error = "No se encontró el reclamo con los datos ingresados"
+                error = "No se encontrÃ³ el reclamo con los datos ingresados"
         else:
-            error = "Número de reclamo inválido"
+            error = "NÃºmero de reclamo invÃ¡lido"
 
     return render(request, "reclamos/portal.html", {
         "reclamo": reclamo,

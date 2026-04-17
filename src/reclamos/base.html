@@ -548,133 +548,6 @@
         flex: unset;
         max-height: 60vh;
     }
-    #tablaReclamos {
-        table-layout: fixed;
-        width: 100%;
-    }
-
-    /* ID */
-    #tablaReclamos th:nth-child(1),
-    #tablaReclamos td:nth-child(1){
-        width: 40px;
-    }
-
-    /* Vecino */
-    #tablaReclamos th:nth-child(2),
-    #tablaReclamos td:nth-child(2){
-        width: 100px;
-    }
-
-    /* Domicilio */
-    #tablaReclamos th:nth-child(3),
-    #tablaReclamos td:nth-child(3){
-        width: 120px;
-    }
-
-    /* Descripcion */
-    #tablaReclamos th:nth-child(4),
-    #tablaReclamos td:nth-child(4){
-        width: 200px;
-    }
-
-    /* Fecha creacion */
-    #tablaReclamos th:nth-child(5),
-    #tablaReclamos td:nth-child(5){
-        width: 85px;
-    }
-
-    /* Fecha cierre */
-    #tablaReclamos th:nth-child(6),
-    #tablaReclamos td:nth-child(6){
-        width: 85px;
-    }
-
-    /* clamp en el contenido interno  */
-    .descripcion-clamp{
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-
-        white-space: normal;
-        word-break: break-word;
-        line-height: 1.2;
-    }
-
-
-    /* Tipo */
-    #tablaReclamos th:nth-child(7),
-    #tablaReclamos td:nth-child(7){
-        width: 70px;
-    }
-
-    /* Prioridad */
-    #tablaReclamos th:nth-child(8),
-    #tablaReclamos td:nth-child(8){
-        width: 65px;
-    }
-
-    /* Estado */
-    #tablaReclamos th:nth-child(9),
-    #tablaReclamos td:nth-child(9){
-        width: 70px;
-    }
-
-    /* Opciones */
-    #tablaReclamos th:nth-child(10),
-    #tablaReclamos td:nth-child(10){
-        width: 80px;
-    }
-
-    #tablaReclamos tbody tr{
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    #tablaReclamos tbody tr td{
-        border-top: 1px solid transparent;
-        border-bottom: 1px solid #dee2e6;
-        transition: border-color 0.18s ease, background-color 0.18s ease;
-        background: #fff;
-    }
-
-    /* hover fila */
-    #tablaReclamos tbody tr:hover{
-        transform: translateY(-3px);
-        box-shadow: 0 6px 14px rgba(0,0,0,0.08);
-        cursor: pointer;
-        position: relative;
-        z-index: 2;
-    }
-
-    /* borde superior + inferior */
-    #tablaReclamos tbody tr:hover td{
-        border-top: 1px solid #0d6efd;
-        border-bottom: 1px solid #0d6efd;
-        background: #f8fbff;
-    }
-
-    /* lateral izquierdo + esquinas */
-    #tablaReclamos tbody tr:hover td:first-child{
-        border-left: 1px solid #0d6efd;
-        border-top-left-radius: 8px;
-        border-bottom-left-radius: 8px;
-    }
-
-    /* lateral derecho + esquinas */
-    #tablaReclamos tbody tr:hover td:last-child{
-        border-right: 1px solid #0d6efd;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
-    }
-
-    /* fila seleccionada */
-    #tablaReclamos tbody tr.fila-seleccionada{
-        box-shadow: 0 0 0 2px rgba(13,110,253,.18);
-    }
-
-    #tablaReclamos tbody tr.fila-seleccionada:hover{
-        transform: translateY(-2px);
-    }
 
     </style>
 </head>
@@ -897,26 +770,14 @@ function ajustarColumnas() {
     let esSector = {{ es_sector|yesno:"true,false" }};
 
     if (esMobile && esSector) {
-
-        // ocultar solo estas
-        window.tabla.column(0).visible(false); // ID
-        window.tabla.column(4).visible(false); // Fecha creación
-        window.tabla.column(5).visible(false); // Fecha cierre
-
-        // mostrar resto
-        window.tabla.column(1).visible(true); // Vecino
-        window.tabla.column(2).visible(true); // Domicilio
-        window.tabla.column(3).visible(true); // Descripción
-
+        window.tabla.column(0).visible(false);
+        window.tabla.column(1).visible(false);
+        window.tabla.column(3).visible(false);
     } else {
-
-        // desktop mostrar todo
-        for (let i = 0; i <= 9; i++) {
-            window.tabla.column(i).visible(true);
-        }
+        window.tabla.column(0).visible(true);
+        window.tabla.column(1).visible(true);
+        window.tabla.column(3).visible(true);
     }
-
-    window.tabla.columns.adjust().draw(false);
 }
 
 // CONTAR FILTROS
@@ -1106,16 +967,10 @@ if (graficoEstado) {
                 <label class="form-label mb-1">Dirección del reclamo</label>
                 <input type="text" name="direccion" id="direccion" class="form-control form-control-sm">
               </div>
-              <div class="row g-2 mt-1">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label mb-1">Entre calle 1</label>
-                        {{ form.entre_calle_1 }}
-                    </div>
 
-                    <div class="col-12 col-md-6">
-                        <label class="form-label mb-1">Entre calle 2</label>
-                        {{ form.entre_calle_2 }}
-                    </div>
+              <div class="col-12">
+                <label class="form-label mb-1">Título</label>
+                {{ form.titulo }}
               </div>
 
               <div class="col-12">
@@ -1384,7 +1239,7 @@ var tabla = $('#tablaReclamos').DataTable({
     },
     columnDefs: [
         {
-            targets: [0,4,5],
+            targets: [0,1,3],
             visible: !(window.innerWidth < 768 && {{ es_sector|yesno:"true,false" }})
         }
     ],
@@ -1404,10 +1259,6 @@ setTimeout(() => {
 
 $('#busquedaGeneral').on('keyup', function () {
     tabla.search(this.value).draw();
-});
-
-window.addEventListener("resize", function () {
-    tabla.columns.adjust().draw();
 });
 
 let reclamoSeleccionado = null
@@ -1532,214 +1383,124 @@ $(document).on("click", ".editar-reclamo", function () {
 });
 
 function abrirEdicion(id){
-    window.modoEdicion = true;
     const ESTADO_FINALIZADO = 5;
-
     fetch(`/dashboard/${id}/`)
     .then(response => response.json())
     .then(data => {
-
+        console.log(data)
         document.getElementById("modalTitulo").innerHTML =
             '<i class="fa-solid fa-pen"></i> Editar Reclamo #' + data.id;
 
         document.getElementById("btnGuardar").innerText = "Actualizar";
         document.querySelector("[name='comentario_operador']").value = "";
         document.getElementById("reclamo_id").value = data.id;
-
-        // Cargar datos
+   	
         document.getElementById("dni").value = data.dni || "";
-        document.getElementById("apellido").value = data.apellido_contacto || "";
-        document.getElementById("nombres").value = data.nombres_contacto || "";
-        document.getElementById("direccion").value = data.direccion || "";
-        document.getElementById("telefono").value = data.telefono_contacto || "";
-        document.getElementById("email").value = data.email_contacto || "";
-        document.getElementById("id_entre_calle_1").value = data.entre_calle_1 || "";
-        document.getElementById("id_entre_calle_2").value = data.entre_calle_2 || "";
-
+	document.getElementById("apellido").value = data.apellido || "";
+	document.getElementById("nombres").value = data.nombres || "";
+	document.getElementById("direccion").value = data.direccion || "";           
+   
+        document.getElementById("id_titulo").value = data.titulo;
         document.getElementById("id_descripcion").value = data.descripcion;
         document.getElementById("id_prioridad").value = data.prioridad;
         document.getElementById("id_estado").value = data.estado;
         document.getElementById("id_tipo_reclamo").value = data.tipo_reclamo;
 
-        // ===============================
-        // RESET GENERAL
-        // ===============================
-        document.querySelectorAll("#modalReclamo input, #modalReclamo textarea").forEach(el => {
-            el.removeAttribute("readonly");
-            el.disabled = false;
-        });
+        if (!ES_ADMIN) {
+            // inputs
+            document.getElementById("id_titulo")?.setAttribute("readonly", "readonly");
+            document.getElementById("id_descripcion")?.setAttribute("readonly", "readonly");
 
-        document.querySelectorAll("#modalReclamo select").forEach(el => {
-            el.disabled = false;
-            el.style.pointerEvents = "";
-            el.style.backgroundColor = "";
-        });
-
-        document.getElementById("btnGuardar").style.display = "inline-block";
-
-        const esFinalizado = parseInt(data.estado) === ESTADO_FINALIZADO;
-
-        // ==================================================
-        // REGLA 1: RECLAMO FINALIZADO
-        // ==================================================
-        if (esFinalizado) {
-
-            document.querySelectorAll("#modalReclamo input, #modalReclamo textarea").forEach(el => {
-                el.setAttribute("readonly", "readonly");
-            });
-
-            document.querySelectorAll("#modalReclamo select").forEach(el => {
-                el.disabled = true;
-                el.style.backgroundColor = "#e9ecef";
-            });
-
-            document.querySelectorAll("#modalReclamo input[type='file']").forEach(el => {
-                el.disabled = true;
-            });
-
-            document.getElementById("btnGuardar").style.display = "none";
+            // select
+            const tipo = document.getElementById("id_tipo_reclamo");
+            if (tipo) {
+                tipo.style.pointerEvents = "none";
+                tipo.style.backgroundColor = "#e9ecef";
+            }
         }
+        const esFinalizado = data.estado === ESTADO_FINALIZADO;
+	if (esFinalizado) {
 
-        // ==================================================
-        // REGLA 2: NO ADMIN
-        // Solo estado + comentario + fotos
-        // ==================================================
-        else if (!ES_ADMIN) {
+    	// bloquear todos los inputs
+    	   document.querySelectorAll("#modalReclamo input, #modalReclamo textarea").forEach(el => {
+           el.setAttribute("readonly", "readonly");
+    	   });
+           document.getElementById("dni").setAttribute("readonly", "readonly");
+	   document.getElementById("dni").removeAttribute("readonly"); 
 
-        // bloquear todos los inputs excepto comentario y file
-        document.querySelectorAll("#modalReclamo input").forEach(el => {
-            if (
-                el.name !== "comentario_operador" &&
-                el.type !== "file" &&
-                el.id !== "reclamo_id"
-            ) {
-                el.setAttribute("readonly", "readonly");
-            }
-        });
+    	// bloquear selects
+           document.querySelectorAll("#modalReclamo select").forEach(el => {
+           el.style.pointerEvents = "none";
+           el.style.backgroundColor = "#e9ecef";
+           });
 
-        // textarea
-        document.querySelectorAll("#modalReclamo textarea").forEach(el => {
-            if (el.name !== "comentario_operador") {
-                el.setAttribute("readonly", "readonly");
-            }
-        });
+    	// bloquear file input (especial)
+    	   document.querySelectorAll("#modalReclamo input[type='file']").forEach(el => {
+           el.disabled = true;
+           });
 
-        // bloquear selects excepto estado
-        document.querySelectorAll("#modalReclamo select").forEach(el => {
-            if (el.id !== "id_estado") {
-                el.style.pointerEvents = "none";
-                el.style.backgroundColor = "#e9ecef";
-            }
-        });
+    	// ocultar botón guardar
+    	   document.getElementById("btnGuardar").style.display = "none";
 
-        // habilitar estado
-        const estado = document.getElementById("id_estado");
-        if (estado) {
-            estado.style.pointerEvents = "";
-            estado.style.backgroundColor = "";
-        }
+	} 
+	else
+        {
 
-        // habilitar fotos
-        document.querySelectorAll("#modalReclamo input[type='file']").forEach(el => {
-            el.disabled = false;
-        });
-    }
+    	// restaurar estado normal
+    	   document.querySelectorAll("#modalReclamo input, #modalReclamo textarea").forEach(el => {
+           el.removeAttribute("readonly");
+           });
 
-        bootstrap.Modal.getOrCreateInstance(
-            document.getElementById('modalReclamo')
-        ).show();
+    	   document.querySelectorAll("#modalReclamo select").forEach(el => {
+           el.style.pointerEvents = "";
+           el.style.backgroundColor = "";
+           });
 
-    });
-}
+    	   document.querySelectorAll("#modalReclamo input[type='file']").forEach(el => {
+           el.disabled = false;
+           });
 
-function limpiarModalNuevo() {
+    	   document.getElementById("btnGuardar").style.display = "inline-block";
+        } 
 
-    const form = document.querySelector("#modalReclamo form");
-    form.reset();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReclamo')).show();
 
-    // títulos
-    document.getElementById("modalTitulo").innerHTML =
-        '<i class="fa-solid fa-plus"></i> Nuevo Reclamo';
+    })
 
-    document.getElementById("btnGuardar").innerText = "Crear Reclamo";
-    document.getElementById("btnGuardar").style.display = "inline-block";
-
-    // id edición
-    document.getElementById("reclamo_id").value = "";
-
-    // limpiar campos manuales
-    [
-        "dni",
-        "apellido",
-        "nombres",
-        "telefono",
-        "email",
-        "direccion",
-        "id_titulo",
-        "id_descripcion",
-        "id_entre_calle_1",
-        "id_entre_calle_2"
-    ].forEach(id => {
-        let el = document.getElementById(id);
-        if (el) el.value = "";
-    });
-
-    // comentario operador
-    let comentario = document.querySelector("[name='comentario_operador']");
-    if (comentario) comentario.value = "";
-
-    // selects normales
-    document.querySelectorAll("#modalReclamo select").forEach(el => {
-        el.disabled = false;
-        el.style.pointerEvents = "";
-        el.style.backgroundColor = "";
-        el.value = "";
-    });
-
-    // select2 contribuyente
-    let select = $("#id_id_contribuyente");
-    if (select.length) {
-        select.prop("disabled", false);
-        select.val(null).trigger("change");
-    }
-
-    // readonly / disabled
-    document.querySelectorAll("#modalReclamo input, #modalReclamo textarea").forEach(el => {
-        el.removeAttribute("readonly");
-        el.disabled = false;
-    });
-
-    // limpiar file input
-    document.querySelectorAll("#modalReclamo input[type='file']").forEach(el => {
-        el.value = "";
-        el.disabled = false;
-    });
-
-    // preview fotos
-    let galeria = document.getElementById("galeriaFotos");
-    if (galeria) galeria.innerHTML = "";
-
-    let preview = document.getElementById("previewFotos");
-    if (preview) preview.innerHTML = "";
-
-    // hidden viejo contribuyente
-    let hidden = document.getElementById("hidden_id_contribuyente");
-    if (hidden) hidden.remove();
-
-    // feedback dni
-    $("#dniFeedback").addClass("d-none");
-
-    if (typeof ultimoDNI !== "undefined") {
-        ultimoDNI = null;
-    }
 }
 
 const btnNuevo = document.querySelector('[data-bs-target="#modalReclamo"]');
 
 if (btnNuevo) {
-    btnNuevo.addEventListener("click", function () {
-        limpiarModalNuevo();
-    });
+    btnNuevo.addEventListener("click", function(){
+            document.getElementById("modalTitulo").innerHTML =
+            '<i class="fa-solid fa-plus"></i> Nuevo Reclamo';
+
+            document.querySelector("#modalReclamo form").reset();
+
+            document.getElementById("btnGuardar").innerText = "Crear Reclamo";
+            document.getElementById("reclamo_id").value = "";
+
+           //  HABILITAR SELECT CORRECTAMENTE
+           let select = $("#id_id_contribuyente");
+           select.prop("disabled", false);
+           select.val(null).trigger('change'); // limpia select2
+
+          //  ELIMINAR HIDDEN si existe
+           let hidden = document.getElementById("hidden_id_contribuyente");
+           if (hidden) hidden.remove();
+
+          // inputs
+           document.getElementById("id_titulo")?.removeAttribute("readonly");
+           document.getElementById("id_descripcion")?.removeAttribute("readonly");
+
+          // select tipo
+           const tipo = document.getElementById("id_tipo_reclamo");
+           if (tipo) {
+              tipo.style.pointerEvents = "";
+              tipo.style.backgroundColor = "";
+           }
+        });
 }
 
 
@@ -1990,129 +1751,40 @@ function mostrarToast(mensaje){
 
 let timeoutDNI = null;
 
-document.addEventListener("DOMContentLoaded", function () {
+document.getElementById("dni").addEventListener("keyup", function () {
 
-    const inputDNI = document.getElementById("dni");
+    clearTimeout(timeoutDNI);
 
-    if (!inputDNI) {
-        console.error("No se encontró el input DNI");
-        return;
-    }
+    let dni = this.value.trim();
 
-    inputDNI.addEventListener("keyup", function () {
+    // evitar consultas innecesarias
+    if (dni.length < 6) return;
 
-        clearTimeout(timeoutDNI);
+    timeoutDNI = setTimeout(() => {
 
-        let dni = this.value.trim();
+        fetch(`/buscar-contribuyente/?dni=${dni}`)
+        .then(res => res.json())
+        .then(data => {
 
-        if (dni.length < 7) return;
+            if (data.exists) {
 
-        timeoutDNI = setTimeout(() => {
+                document.getElementById("apellido").value = data.apellido || "";
+                document.getElementById("nombres").value = data.nombres || "";
+                document.getElementById("email").value = data.email || "";
+                document.getElementById("telefono").value = data.telefono || "";
 
-            console.log("Buscando DNI:", dni);
-
-            fetch(`/dashboard/buscar-contribuyente/?dni=${dni}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("HTTP " + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
-
-                console.log("Respuesta:", data);
-
-                if (data.existe) {
-                    document.getElementById("apellido").value = data.apellido || "";
-                    document.getElementById("nombres").value = data.nombres || "";
-                    document.getElementById("telefono").value = data.telefono || "";
-                    document.getElementById("email").value = data.email || "";
-                }
-
-            })
-            .catch(err => {
-                console.error("Error en fetch:", err);
-            });
-
-        }, 500);
-
-    });
-    const modal = document.getElementById("modalReclamo");
-
-    if (modal) {
-        modal.addEventListener("show.bs.modal", function (event) {
-
-            const boton = event.relatedTarget;
-
-            // Si NO viene desde editar, limpiar para nuevo
-            if (!window.modoEdicion) {
-                limpiarModalNuevo();
             }
+            if (!data.exists) {
+                document.getElementById("apellido").value = "";
+                document.getElementById("nombres").value = "";
+                document.getElementById("email").value = "";
+                document.getElementById("telefono").value = "";
+            }
+
         });
 
-        modal.addEventListener("hidden.bs.modal", function () {
-            window.modoEdicion = false;
-        });
-    }
-
+    }, 400); //  espera 400ms
 });
-
-const SESSION_AGE = {{ session_age|default:1800 }};
-const WARNING_BEFORE = 15; // avisar 2 min antes
-
-//const SESSION_AGE = 30;
-//const WARNING_BEFORE = 20;
-
-let tiempoAviso = (SESSION_AGE - WARNING_BEFORE) * 1000;
-let tiempoLogout = SESSION_AGE * 1000;
-
-setTimeout(() => {
-    mostrarAvisoSesion();
-}, tiempoAviso);
-
-setTimeout(() => {
-    window.location.href = "/login/";
-}, tiempoLogout);
-
-function mostrarAvisoSesion() {
-
-    if (document.getElementById("toastSesion")) return;
-
-    const html = `
-        <div id="toastSesion"
-             class="toast show position-fixed bottom-0 end-0 m-3"
-             style="z-index:9999; min-width:320px;">
-            <div class="toast-header bg-primary">
-                <strong class="me-auto">Sesión</strong>
-            </div>
-            <div class="toast-body">
-                Su sesión vencerá pronto.<br><br>
-
-                <button class="btn btn-sm btn-success"
-                        onclick="renovarSesion()">
-                    Continuar conectado
-                </button>
-
-                <button class="btn btn-sm btn-danger"
-                        onclick="window.location='/logout/'">
-                    Salir
-                </button>
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML("beforeend", html);
-}
-
-function renovarSesion() {
-    fetch(window.location.href, {
-        method: "GET",
-        credentials: "same-origin"
-    }).then(() => {
-        location.reload();
-    });
-}
-
 </script>
 {% endblock %}
 </body>

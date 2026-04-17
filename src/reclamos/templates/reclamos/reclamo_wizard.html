@@ -49,7 +49,7 @@ Paso 1 de 5
 
         <div class="mb-3">
             <label>DNI</label>
-            <input type="text" class="form-control" name="dni" id="dni" required>
+            <input type="text" class="form-control" name="dni" id="dni" inputmode="numeric" pattern="[0-9]*">
         </div>
 
         <div class="mb-3">
@@ -95,12 +95,27 @@ Paso 1 de 5
     <div class="step">
         <h5>Detalle del reclamo</h5>
         <div class="mb-3">
-            <label>Título</label>
-            <input type="text" class="form-control" name="titulo">
-        </div>
-        <div class="mb-3">
             <label>Dirección</label>
             <input type="text" class="form-control" name="direccion" placeholder="Ej: San Martín 2359">
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <label class="form-label">Entre calle 1</label>
+                <input type="text"
+                       class="form-control"
+                       name="entre_calle_1"
+                       id="entre_calle_1"
+                       maxlength="100">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Entre calle 2</label>
+                <input type="text"
+                       class="form-control"
+                       name="entre_calle_2"
+                       id="entre_calle_2"
+                       maxlength="100">
+            </div>
         </div>
         <div class="mb-3">
             <label>Descripción</label>

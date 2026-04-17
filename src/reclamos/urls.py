@@ -18,7 +18,7 @@ urlpatterns = [
     path('foto/eliminar/<int:id>/', views.eliminar_foto),
 
 # PORTAL CIUDADANO
-    #path('portal/', views.portal_reclamos, name='portal_reclamos'),
+    path('portal/', views.portal_reclamos, name='portal_reclamos'),
     path('nuevo/', views.reclamo_wizard, name='reclamo_wizard'),
     path('consultar/', views.consultar_reclamo, name='consultar_reclamo'),
     path('buscar-contribuyente/', views.buscar_contribuyente, name='buscar_contribuyente'),
